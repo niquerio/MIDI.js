@@ -164,7 +164,7 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 	};
 
 	root.setVolume = function (channel, volume) {
-		masterVolume = volume;
+		MIDI.channels[channel].volume = volume;
 	};
 
 	root.programChange = function (channel, program) {
@@ -172,9 +172,11 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 	};
 
 	root.noteOn = function (channel, note, velocity, delay) {
+        
 		/// check whether the note exists
 		if (!MIDI.channels[channel]) return;
 		var instrument = MIDI.channels[channel].instrument;
+        var volume = MIDI.channels[channel].volume;
 		if (!audioBuffers[instrument + "" + note]) return;
 		/// convert relative delay to absolute delay
 		if (delay < ctx.currentTime) delay += ctx.currentTime;
@@ -185,7 +187,7 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 		source.connect(ctx.destination);
 		///
 		var gainNode = ctx.createGainNode();
-		var value = (velocity / 127) * (masterVolume / 127) * 2 - 1;
+		var value = (velocity / 127) * (volume / 127) * 2 - 1;
 		gainNode.connect(ctx.destination);
 		gainNode.gain.value = Math.max(-1, value);
 		source.connect(gainNode);
@@ -226,7 +228,7 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 	root.connect = function (conf) {
 		setPlugin(root);
 		//
-		MIDI.Player.ctx = ctx = new AudioContext();
+		midiPlayer.ctx = ctx = new AudioContext();
 		///
 		var urlList = [];
 		var keyToNote = MIDI.keyToNote;
@@ -557,7 +559,8 @@ MIDI.GeneralMIDI = (function (arr) {
 });
 
 // channel-tracker
-MIDI.channels = (function () { // 0 - 15 channels
+
+MIDI.initChannels = function() { // 0 - 15 channels
 	var channels = {};
 	for (var n = 0; n < 16; n++) {
 		channels[n] = { // default values
@@ -566,12 +569,14 @@ MIDI.channels = (function () { // 0 - 15 channels
 			mute: false,
 			mono: false,
 			omni: false,
-			solo: false
+			solo: false,
+            volume: 127,
 		};
 	}
 	return channels;
-})();
+};
 
+MIDI.channels = MIDI.initChannels();
 //
 MIDI.pianoKeyOffset = 21;
 
@@ -591,3 +596,4 @@ MIDI.noteToKey = {}; // 108 ==  C8
 })();
 
 })();
+

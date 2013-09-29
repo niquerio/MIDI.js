@@ -33,6 +33,7 @@ SOUNDFONT = "./FluidR3_GM.sf2"        # Soundfont file path
 # all instruments in the below array. Add or remove as necessary.
 INSTRUMENTS = [
   0,     # Acoustic Grand Piano
+  6,     # Harpsichord
   24,    # Acoustic Guitar (nylon)
   25,    # Acoustic Guitar (steel)
   26,    # Electric Guitar (jazz)
@@ -45,7 +46,9 @@ INSTRUMENTS = [
   65,    # Alto Sax
   66,    # Tenor Sax
   67,    # Baritone Sax
+  68,    # Oboe
   73,    # Flute
+  74,    # Recorder
   118    # Synth Drum
 ]
 
