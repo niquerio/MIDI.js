@@ -8,9 +8,8 @@
 	-------------------------------------
 
 Things to Do:
-	Time Changes;
-	Tempo Changes;
-
+	Handle Pickups.
+	Still not quite dealing with time changes correctly.
 */
 
 
@@ -23,6 +22,9 @@ function MidiPlayer(){
     this.restart = 0; 
     this.playing = false;
     this.timeWarp = 1;
+    this.measures = []; //Measure number: time of measure number;
+    this.firstMeasureToBePlayed = 1;
+    this.lastMeasureToBePlayed = 1;
 
     //Private Variables
     var eventQueue = []; // hold events to be triggered
@@ -38,7 +40,7 @@ function MidiPlayer(){
     var measureTimeSoFar = 0;
     var beatsPerMeasure;
     var measuresSoFar = 0;
-    var firstNoteFlag = false;
+    var firstNoteHasPlayed = false;
     
 
 //Private Methods
@@ -65,9 +67,14 @@ function scheduleTracking(metronome, channel, note, currentTime, offset, message
         	if(metronome){ 
 			return; }
 		self.currentTime = currentTime;
-		if (self.currentTime === queuedTime && queuedTime < self.endTime) { // grab next sequence
+		//if (self.currentTime === queuedTime && queuedTime < self.endTime) { // grab next sequence
+		if (self.currentTime === queuedTime && queuedTime <= self.measures[self.lastMeasureToBePlayed]) { // grab next sequence
 			startAudio(queuedTime, true);
 		}
+		if(self.currentTime > self.measures[self.lastMeasureToBePlayed]){
+			self.stop();
+			self.start();
+		}	 
 	}, currentTime - offset);
 	return interval;
 };
@@ -90,6 +97,49 @@ function getLength(){
 	}
 	return totalTime;
 };
+
+function getMeasures(){
+    var data = self.data;
+    var length = data.length;
+    var miliSecondsPerBeat = null;
+    var beatsPerMeasure = null;
+    var firstNoteHasPlayed = false; //flag to account for first note.
+    var measureLength = 0;
+    var eventTimeSoFar = 0; //total Time Up To Current Event;
+    var measureTimeSoFar = 0; //total Time For Measures Up to now
+
+    self.measures[1] = 0;
+
+    for(var i = 0; i< length; i++){
+	var event = data[i][0].event;
+	if( event.type === "meta" && event.subtype === "setTempo"){
+		miliSecondsPerBeat = event.microsecondsPerBeat * self.timeWarp / 1000;
+    		measureLength = miliSecondsPerBeat * beatsPerMeasure;
+
+	}
+	else if( event.type === "meta" && event.subtype === "timeSignature"){
+		beatsPerMeasure = event.numerator * (4 / event.denominator);	
+    		measureLength = miliSecondsPerBeat * beatsPerMeasure;
+	}
+	if(measureLength && !firstNoteHasPlayed){
+		firstNoteHasPlayed = true;
+		measureTimeSoFar += measureLength;
+		self.measures.push(measureTimeSoFar); 	
+		
+	}
+	if (data[i][1]){
+		eventTimeSoFar += data[i][1];
+		if(eventTimeSoFar >= measureTimeSoFar){
+			measureTimeSoFar += measureLength;
+			self.measures.push(measureTimeSoFar); 	
+		}
+	}
+            
+    }
+    self.lastMeasureToBePlayed = self.measures.length - 1;
+    self.firstMeasureToBePlayed = 1;
+
+}
 
 function getActiveChannels(){
 	var data = self.data;
@@ -158,54 +208,37 @@ function startAudio (currentTime, fromCache){
 	for (var n = 0; n < length && messages < 100; n++) {
 //	for (var n = 0; n < length; n++) {
 		queuedTime += data[n][1];
+		//if(queuedTime > self.lastMeasureToBePlayed){
+		// Start over	
+		//}
+		
 		if (queuedTime < currentTime) {
 			offset = queuedTime;
 			continue;
 		}
 		currentTime = queuedTime - offset; //where in file we are; accounting for starting in middle. Private Var
+
+		
+		if(!firstNoteHasPlayed){
+			firstNoteHasPlayed = true;	//this is the first note;	
+			measuresSoFar++;
+			eventQueue.push({
+				source: null,
+        			interval:scheduleTracking(measuresSoFar, null, 
+				null, self.measures[measuresSoFar], offset, null, null ),
+			}); 
+		}
+		if(queuedTime >= self.measures[measuresSoFar + 1]){
+			measuresSoFar++;
+			eventQueue.push({
+				source: null,
+        			interval:scheduleTracking(measuresSoFar, null, 
+					null, self.measures[measuresSoFar], offset, null, null ),
+			}); 
+
+		}
 		var event = data[n][0].event; // current event;
 
-//Supposed to handle time changes.
-		if( event.type === "meta" && event.subtype === "setTempo"){
-			miliSecondsPerBeat = event.microsecondsPerBeat * self.timeWarp / 1000;
-    			measure = miliSecondsPerBeat * beatsPerMeasure;
-			continue;
-		}
-		else if( event.type === "meta" && event.subtype === "timeSignature"){
-			beatsPerMeasure = event.numerator * (4 / event.denominator);	
-    			measure = miliSecondsPerBeat * beatsPerMeasure;
-			continue;
-		}
-//Still not quite right...
-		if(data[n][1]){
-			if(!firstNoteFlag){
-				firstNoteFlag = true;	//this is the first note;	
-				measuresSoFar++;
-				measureTimeSoFar = queuedTimeOffset;
-				eventQueue.push({
-					source: null,
-        				interval:scheduleTracking(measuresSoFar, null, 
-					null, measureTimeSoFar, offset, null, null ),
-				}); 
-			}
-			var nextMeasureTime = measureTimeSoFar+measure;
-	//		var nextMeasureTime = measuresSoFar*measure+queuedTimeOffset;
-			for(var i = n+1; i < length; i++){
-				if(data[i][1]){
-					var nextEventTime = queuedTime + data[i][1];	
-					if(nextEventTime > nextMeasureTime){
-						measuresSoFar++;
-						measureTimeSoFar = nextMeasureTime;
-						eventQueue.push({
-						source: null,
-        					interval:scheduleTracking(measuresSoFar, null, 
-							null, measureTimeSoFar, offset, null, null ),
-						}); 
-					}
-					break;
-				}	
-			}
-		}	
 
 		if (event.type !== "channel") continue; // only care about channel data;
 		var channel = event.channel;
@@ -302,7 +335,7 @@ function stopAudio(){
 	noteRegistrar = {};
 	measuresSoFar = 0;
 	measureTimeSoFar = 0;
-	firstNoteFlag = false;
+	firstNoteHasPlayed = false;
 };
 
 
@@ -322,7 +355,7 @@ this.start = this.resume = function(){
 this.stop = function(){
 	stopAudio();
 	self.restart = 0;
-	self.currentTime = 0;
+	self.currentTime = self.measures[self.firstMeasureToBePlayed]; 
 };
 this.pause = function(){
 	var tmp = self.restart;
@@ -343,7 +376,9 @@ this.loadMidiFile = function(){
 	self.endTime = getLength();
     self.MIDIOffset = 0;
     active_channels = [];
+    self.measures = [];
 	getActiveChannels();
+	getMeasures();
 };
 this.loadFile = function(file, init, callback) {
 	self.stop();

@@ -49,12 +49,7 @@
                 var output = [];
                     for (var i = 0, f; f = files[i]; i++) {
                        readFile(f); 
-                     // output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
-                     //             f.size, ' bytes, last modified: ',
-                     //             f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
-                     //             '</li>');
                     }
-                   // document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
                $(this).css("background-color","");
              }
                 
@@ -75,10 +70,8 @@
              }
 
             
-            //FIX THIS!!!! GET IT TO WORK!!!!
             function readFile(f){
                     var reader = new FileReader();
-                   // var f = $(this).files[0]; 
                     reader.readAsDataURL(f);
                     reader.onload = function() {
                        currentSong = reader.result;
@@ -109,7 +102,7 @@
                             })
                     .appendTo(masterVol);
 
-                var tempo = $("#tempo").text("Tempo: ")
+                var tempo = $("#tempo").text("Tempo: ");
                     $("<input>")
                         .attr("type","number")
                         .attr("min","0")
@@ -122,7 +115,8 @@
                                    //player.start();
                                    })
                         .appendTo(tempo);
-                var transpose = $("#transpose").text("Transpose: ")
+
+                var transpose = $("#transpose").text("Transpose: ");
                     $("<input>")
                         .attr("type","number")
                         //.attr("min","0")
@@ -133,6 +127,38 @@
                                    player.resume();
                                    })
                         .appendTo(transpose);
+		var total_measures = player.measures.length - 1;
+		var start_stop = $("#start_stop").empty();
+		var start_stop_text = $("<p>")
+			.text("Measures: 0 - " + total_measures)
+			.attr("id","start_stop_text")
+			.appendTo(start_stop);
+		var start_stop_slider = $("<div>")
+			.attr("id","start_stop_range")
+			.slider({
+				"min":1,
+				"max": total_measures,
+				"range":true,
+				"values":[1,total_measures],
+				"slide": function(event,ui){
+					if(ui.values[1] - ui.values[0] > 0){
+						start_stop_text.text("Measures: " + ui.values[0] + " - " + ui.values[1]);
+						return true;
+					}else{	
+						return false; 
+					}
+
+				},
+				"change": function(event,ui){
+					player.firstMeasureToBePlayed = ui.values[0];
+					player.lastMeasureToBePlayed = ui.values[1];
+					player.stop();
+					player.resume();
+				}
+			})
+			.appendTo(start_stop);
+	
+
                 var chList = $("#channels");
                 chList.empty();
                 for (var i = 0; i < active_channels.length; i++){
@@ -208,7 +234,6 @@
                        $("#"+muteId).change(function(){
                                var id = $(this).parents().eq(1).attr("id");
                                var soloId = "#solo" + id;
-                  //             alert("Soloid is: " + soloId);
 
                                if( $(this).is(':checked')){
                                     player.pause(true);
@@ -366,7 +391,7 @@ var dropZone = document.getElementById('drop_zone');
                     currentSong = song[id];
                     player.timeWarp = 1;
                     MIDI.channels = MIDI.initChannels();
-                    player.loadFile(currentSong, 1, player.start); // load MIDI
+                    player.loadFile(currentSong, 1, start_stop); // load MIDI
                     showSongInfo();
                 };
 
@@ -381,7 +406,10 @@ var dropZone = document.getElementById('drop_zone');
                         showSongInfo();
                     }
                 },204); 
-
+		function start_stop(){
+			player.stop();
+			player.start();
+		}
 
             }
             
@@ -419,6 +447,7 @@ var dropZone = document.getElementById('drop_zone');
                 <div style="width:50%;height:300px;border:5px solid;" id="drop_zone">Drop Files Here</div>
             <div id="info">
                 <div id="counter"></div>
+		<div id="start_stop"></div>
                 <div id="masterVolume"></div>
                 <div id="transpose"></div>
                 <div id="tempo"></div>
