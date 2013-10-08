@@ -151,7 +151,7 @@ function getActiveChannels(){
 		        if(current_event.programNumber){		
 				active_channels[current_event.channel] = current_event.programNumber;
 			    }else{
-				active_channels[current_event.channel] = null;
+				active_channels[current_event.channel] = 0;
 			}
 	
 		}
@@ -386,7 +386,7 @@ this.loadFile = function(file, init, callback) {
 		var data = window.atob(file.split(",")[1]);
 		self.currentData = data;
 		self.loadMidiFile();
-        if(init) initChannelPrograms();
+        	if(init) initChannelPrograms();
 		if (callback) callback(data);
 		return;
 	}
