@@ -6,6 +6,7 @@
         <!-- midi.js css -->
         <link href="./css/MIDIPlayer.css" rel="stylesheet" type="text/css" />
         <link href="./jquery/css/smoothness/jquery-ui-1.10.3.custom.css" rel="stylesheet" type="text/css" />
+
         <!-- midi.js package -->
         <script src="./js/Color/SpaceW3.js" type="text/javascript"></script>
         <script src="./js/MIDI/AudioDetect.js" type="text/javascript"></script>
@@ -16,13 +17,13 @@
         <script src="./js/Widgets/Loader.js" type="text/javascript"></script>
 
         <!-- maybe I can get rid of these when I've switched everything to jquery?? -->
-
-<!--        <script src="./js/Window/Event.js" type="text/javascript"></script>
-       <script src="./js/Window/DOMLoader.XMLHttp.js" type="text/javascript"></script>-->
         <script src="./js/Window/DOMLoader.script.js" type="text/javascript"></script> 
+
         <!-- jquery package -->
 		<script src="jquery/js/jquery-1.9.1.js"></script>
 		<script src="jquery/js/jquery-ui-1.10.3.custom.js"></script>
+
+
         <!-- jasmid package -->
         <script src="./inc/jasmid/stream.js"></script>
         <script src="./inc/jasmid/midifile.js"></script>
@@ -30,647 +31,594 @@
         <!-- extras -->
         <script src="./inc/Base64.js" type="text/javascript"></script>
         <script src="./inc/base64binary.js" type="text/javascript"></script>
-        <!--      <script src="./inc/dropzone.js" type="text/javascript"></script> -->
         
-        <!-- loaded midiFiles -->
-        <script src="./midiFiles.js" type="text/javascript"></script> 
-        <style>
-            .ui-state-default .icon-microphone  { background-image:  url(./images/microphone-light.png) !important  }
-            .ui-state-hover .icon-microphone, 
-            .ui-state-focus .icon-microphone, 
-            .ui-state-active .icon-microphone  { 
-                background-image:  url(./images/microphone-medium.png) !important  }
-            .ui-state-highlight .ui-microphone {
-                background-image:  url(./images/microphone-blue.png) !important  }
-
-            .ui-state-error .ui-microphone, 
-            .ui-state-error-text .ui-microphone {
-                background-image:  url(./images/microphone-red.png) !important  }
-            .ui-state-default .icon-mute  { background-image:  url(./images/mute-light.png) !important  }
-            .ui-state-hover .icon-mute, 
-            .ui-state-focus .icon-mute, 
-            .ui-state-active .icon-mute  { 
-                background-image:  url(./images/mute-medium.png) !important  }
-            .ui-state-highlight .ui-mute {
-                background-image:  url(./images/mute-blue.png) !important  }
-
-            .ui-state-error .ui-mute, 
-            .ui-state-error-text .ui-mute {
-                background-image:  url(./images/mute-red.png) !important  }
-        </style>
 
         <script type="text/javascript">
 
-            var player = {}; 
-            var songid = 0; //initialize songid;
+/* Main Variables for the script */
+var player = {}; 
+var currentSong = ''; 
 
-            var currentSong = ''
+/*Reads files that are droped or loaded the olde fashioned way */
+function readFile(f){
+    var reader = new FileReader();
+    reader.readAsDataURL(f);
+    reader.onload = function() {
+        currentSong = reader.result;
+        player.timeWarp = 1;
+        MIDI.channels = MIDI.initChannels();
+        player.loadFile(currentSong,1); 
+        showSongInfo();
+        $("#play").button("enable");
+        $("#stop").button("enable");
+        $("#capsule").slider("enable");
+        $(".mplayer .volume").slider("enable");
+    }
+    reader.onerror = function(e) {
+        alert("Error!: " + e);
+    }
+} 
 
-            function handleFileSelect(evt){
-                evt.stopPropagation();
-                evt.preventDefault();
-                var files = evt.dataTransfer.files; // FileList object.
-                var output = [];
-                    for (var i = 0, f; f = files[i]; i++) {
-                       readFile(f); 
-                    }
-               $(this).css("background-color","");
-             }
-                
-             function handleDragOver(evt) {
-               evt.stopPropagation();
-               evt.preventDefault();
-               $(this).css("background-color","#E8E8E8");
-               
-              // evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-             }
-             
-             function handleDragOut(evt) {
-               evt.stopPropagation();
-               evt.preventDefault();
-               $(this).css("background-color","");
-               
-              // evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-             }
+/*Drag and Drop functions; Called in load; */
+function handleFileSelect(evt){
+    evt.stopPropagation();
+    evt.preventDefault();
+    var files = evt.dataTransfer.files; // FileList object.
+    var output = [];
+    for (var i = 0, f; f = files[i]; i++) {
+        readFile(f); 
+    }
+    $(this).css("background-color","");
+}
 
-            
-            function readFile(f){
-                    var reader = new FileReader();
-                    reader.readAsDataURL(f);
-                    reader.onload = function() {
-                       currentSong = reader.result;
-                       player.timeWarp = 1;
-                       MIDI.channels = MIDI.initChannels();
-                       player.loadFile(currentSong,1,player.start); 
-                        showSongInfo();
-                    }
-                    reader.onerror = function(e) {
-                        alert("Error!: " + e);
-                    }
-           } 
+function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    $(this).css("background-color","#E8E8E8");
 
+}
+
+function handleDragOut(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    $(this).css("background-color","");
+
+}
+
+/*Makes Master Volume Slider */
 function makeMasterVolumeSlider(){
 
-	// create the volume slider
-		$('.mplayer .volume')
-			.slider({
-				max: 100,
-				orientation: 'vertical',
-				range: 'min',
-				step: 1,
-				value: player.MIDIMasterVol,
-				start: function(event, ui) {
-					$(this).addClass('ui-slider-sliding');
-					$(this).parents('.ui-slider').css({
-						'margin-top': (((1 - player.MIDIMasterVol/100 ) * -100) + 5) + 'px',
-						'height': '100px'
-					}).find('.ui-slider-range').show();
-				},
-				slide: function(event, ui) {
+    // create the volume slider
+    $('.mplayer .volume')
+        .slider({
+            max: 100,
+            orientation: 'vertical',
+            range: 'min',
+            step: 1,
+            value: 100,
+            disabled: true,
+            start: function(event, ui) {
+                $(this).addClass('ui-slider-sliding');
+                $(this).parents('.ui-slider').css({
+                    'margin-top': (((1 - player.MIDIMasterVol/100 ) * -100) + 5) + 'px',
+                    'height': '100px'
+                }).find('.ui-slider-range').show();
+            },
+            slide: function(event, ui) {
+                player.pause(true);
+                $(this).css({ 'height': '100px' }).find('.ui-slider-range').show();
+            },
+            stop: function(event, ui) {
+                $(this).removeClass('ui-slider-sliding');
+                var overHandle = $(event.originalEvent.target)
+                    .closest('.ui-slider-handle')
+                    .length > 0;
+                if (!overHandle) {
+                    $(this).css({ 'height': '' }).find('.ui-slider-range').hide();
+                }
+              },
+            change: function(event, ui) {
+                if (ui.value >= 0 && ui.value <= 100) {
+                    if (ui.value != player.MIDIMasterVol ) {
                         player.pause(true);
-					$(this).css({
-					//	'margin-top': (((1 - player.MIDIMasterVol/100 ) * -100) + 5) + 'px',
-						'height': '100px'
-					}).find('.ui-slider-range').show();
-				},
-				stop: function(event, ui) {
-					$(this).removeClass('ui-slider-sliding');
-					var overHandle = $(event.originalEvent.target).closest('.ui-slider-handle').length > 0;
-					if (!overHandle) {
-						$(this).css({
-					//		'margin-top': '',
-							'height': ''
-						}).find('.ui-slider-range').hide();
-					}
-				},
-				change: function(event, ui) {
-					if (ui.value >= 0 && ui.value <= 100) {
-						if (ui.value != player.MIDIMasterVol ) {
-                            player.pause(true);
-                            player.MIDIMasterVol = ui.value;
-                            player.resume();
-						}
-					}
-				}
-			})
-			.mouseenter(function(event) {
-				if ($('.ui-slider-handle.ui-state-active').length) {
-					return;
-				}
-				$(this).css({
-					'margin-top': (((1 - player.MIDIMasterVol/100 ) * -100) + 5) + 'px',
-					'height': '100px'
-				}).find('.ui-slider-range').show();
-			})
-			.mouseleave(function() {
-				$(this).not('.ui-slider-sliding').css({
-					'margin-top': '',
-					'height': ''
-				}).find('.ui-slider-range').hide();
-			})
-            .find('.ui-slider-range').addClass('ui-corner-bottom').hide().end()
-                
+                        player.MIDIMasterVol = ui.value;
+                        player.resume();
+                    }
+                }
+            }
+        })
+        .mouseenter(function(event) {
+            if ($('.ui-slider-handle.ui-state-active').length) { return; }
+            $(this).css({
+                'margin-top': (((1 - player.MIDIMasterVol/100 ) * -100) + 5) + 'px',
+                'height': '100px',
+            }).find('.ui-slider-range').show();
+        })
+        .mouseleave(function() {
+            $(this).not('.ui-slider-sliding').css({
+                'margin-top': '',
+                'height': ''
+            }).find('.ui-slider-range').hide();
+         })
+        .find('.ui-slider-range').addClass('ui-corner-bottom').hide().end();
+
 
 }//End makeMasterVolumeSlider
 
-function setUpChannels(){
+/*Makes Channel li's */
+function setupChannels(){
     for(var i = 0; i < 16; i++){
-                    //var defaultProgram = active_channels[i];
-                    var defaultProgram = 0;
-                    //var li = $('<li/>')
-                    //    .text("Channel Number: " + i)
-                    //    .attr("id",i)
-                    //    .appendTo(chList); 
-                    var li = $("#channel" + i);
+        var defaultProgram = 0;
+        var li = $("#channel" + i);
 
-                    var channelNum = $('<span>')
-                        .addClass("channelNum")
-                        .text(i)
-                        .appendTo(li);
+        //Set up Channel Number
+        var channelNum = $('<span>')
+            .addClass("channelNum")
+            .text(i)
+            .appendTo(li);
 
-               
-                    var muteSoloId = "muteSolo" + i;
-                    var muteId = "mute" + i;
-                    var soloId = "solo" + i;
+        //Set up Solo and Mute Checkboxes/buttons
+        var soloMuteId = "soloMute" + i;
+        var muteId = "mute" + i;
+        var soloId = "solo" + i;
 
-                    var muteSolo = $('<div>')
-                        .attr("id",muteSoloId)
-                        .addClass("muteSolo");
+        var soloMute = $('<div>')
+            .attr("id",soloMuteId)
+            .addClass("soloMute");
 
+        var solo = $('<input>')
+            .attr("type","checkbox")
+            .attr("id",soloId)
+            .appendTo(soloMute);
 
-                   var solo = $('<input>')
-                       .attr("type","checkbox")
-                       .attr("id",soloId)
-                       .appendTo(muteSolo);
+        var soloLabel = $('<label>')
+            .attr("for",soloId)
+            .addClass("soloMuteLabel")
+            .text("SOLO")
+            .appendTo(soloMute);
 
-                   var soloLabel = $('<label>')
-                        .attr("for",soloId)
-                        .addClass("muteSoloLabel")
-                        .text("SOLO")
-                        .appendTo(muteSolo);
+        var mute = $('<input>')
+            .attr("type","checkbox")
+            .attr("id",muteId)
+            .appendTo(soloMute);
 
-                   var mute = $('<input>')
-                       .attr("type","checkbox")
-                       .attr("id",muteId)
-                       .appendTo(muteSolo);
+        var muteLabel = $('<label>')
+            .attr("for",muteId)
+            .addClass("soloMuteLabel")
+            .text("MUTE")
+            .appendTo(soloMute);
 
-                   var muteLabel = $('<label>')
-                        .attr("for",muteId)
-                        .addClass("muteSoloLabel")
-                        .text("MUTE")
-                        .appendTo(muteSolo);
-                        
+        soloMute.appendTo(li);
 
-                   muteSolo.appendTo(li);
-                  
-                   $("#"+muteId).button({
-				            text: false,
-				            icons: { primary: "icon-mute" },
-                       });
+        $("#"+muteId).button({
+            text: false,
+            icons: { primary: "icon-mute" },
+        }).button("disable");
 
-                    $("#" +soloId).button({
-        				text: false,
-        				icons: { primary: "icon-microphone" },
-                    });
+        $("#" +soloId).button({
+            text: false,
+            icons: { primary: "icon-microphone" },
+        }).button("disable");
 
-                       $("#"+muteId).change(function(){
-                               var id = $(this).parents().eq(1).attr("id").replace(/\D/g,'');
-                               var soloId = "#solo" + id;
+        $("#"+muteId).change(function(){
+            var id = $(this).parents().eq(1).attr("id").replace(/\D/g,'');
+            var soloId = "#solo" + id;
 
-                               if( $(this).is(':checked')){
-                                    player.pause(true);
-                                    if( $(soloId).is(':checked')){
-                                        $(soloId).prop("checked", false);
-                                        $(soloId).button("refresh");
-                                        MIDI.channels[id].solo = false;
-                                    } 
-                                    MIDI.channels[id].mute = true;
-                                    player.resume();
-                               }
-                               else{
-                                    player.pause(true);
-                                    MIDI.channels[id].mute = false;
-                                    player.resume();
-                               }
-
-                               }); 
-
-                       $("#"+soloId).change(function(){
-                               var id = $(this).parents().eq(1).attr("id").replace(/\D/g,'');
-                               var muteId = "#mute" + id;
-
-                               if( $(this).is(':checked')){
-                                    player.pause(true);
-                                    if( $(muteId).is(':checked')){
-                                        $(muteId).prop("checked", false);
-                                        $(muteId).button("refresh");
-
-                                        MIDI.channels[id].mute = false;
-                                    } 
-                                    MIDI.channels[id].solo = true;
-                                    player.resume();
-                               }
-                               else{
-                                    player.pause(true);
-                                    MIDI.channels[id].solo = false;
-                                    player.resume();
-                               }
-
-                               }); 
-                   var program = $('<select>')
-                       .addClass("program")
-                       .attr("id","program"+i)
-                       .append("<option value=\"0\">Acoustic Grand Piano</option>")
-                       .append("<option value=\"6\">Harpsichord</option>")
-                       .append("<option value=\"74\">Recorder</option>")
-                       .change(function(){
-                            player.pause(true);
-                            var channel = $(this).parent().attr("id").replace(/\D/g,'');
-                            var program = $(this).val();
-                            MIDI.programChange(channel,program);
-                            player.resume();
-                        })
-                       .appendTo(li);
-
-                   var selector = "option[value='"  + defaultProgram + "']"; 
-                   program.find(selector).attr('selected',true);
-
-                    var slider = $('<div>')
-                        .addClass("trackVol")
-                        .attr("id","channelVol"+i)
-                        .slider({
-                                "range": "min", 
-                                "min": 0,
-                                "max": 127,
-                                "value": MIDI.channels[i].volume,
-                        })
-                        .slider({change: (function(event,ui){
-                                   player.pause(true);
-                                    var channel = $(this).parent().attr("id").replace(/\D/g,'');
-                                    var volume = ui.value;
-                                   MIDI.setVolume(channel,volume); 
-                                   player.resume();
-                            })
-                        })
-                        .appendTo(li);
-
-
-                }
-
-}//end setUpChannels
-
-
-
-            function showSongInfo(){
-                //$("#stuff").button();
-                makeMasterVolumeSlider();
-
-                var tempo = $("#tempo").text("Tempo (%): ");
-                    $("<input>")
-                        .attr("type","number")
-                        .attr("min","0")
-                        .val( (1 / player.timeWarp ) * 100)
-                        .change(function(){
-                                   player.stop();
-                                   var tmp = $(this).val() / 100;
-                                   player.timeWarp = 1 / tmp; 
-                                   player.loadFile(currentSong,0,player.start);
-                                   })
-                        .appendTo(tempo);
-
-                var transpose = $("#transpose").text("Transpose (+/- semitone): ");
-                    $("<input>")
-                        .attr("type","number")
-                        .val( player.MIDIOffset)
-                        .change(function(){
-                                   player.pause(true);
-                                   player.MIDIOffset = parseInt($(this).val());
-                                   player.resume();
-                                   })
-                        .appendTo(transpose);
-		var total_measures = player.measures.length - 1;
-        $("#start_stop_text").text("Measures to Play: 0 - " + total_measures);
-
-        $("#start_stop_range")
-			.slider({
-				"min":1,
-				"max": total_measures,
-				"range":true,
-				"values":[1,total_measures],
-				"slide": function(event,ui){
-					if(ui.values[1] - ui.values[0] > 0){
-						$("#start_stop_text").text("Measures to Play: " + ui.values[0] + " - " + ui.values[1]);
-						return true;
-					}else{	
-						return false; 
-					}
-
-				},
-				"change": function(event,ui){
-					player.firstMeasureToBePlayed = ui.values[0];
-					player.lastMeasureToBePlayed = ui.values[1];
-					player.stop();
-					player.resume();
-				},
-			});
-	
-                var active_channels = player.get_active_channels();
-
-                for (var i = 0; i < 16; i++){
-                    var channelId = "#channel" + i;
-                    var soloId = "#solo" + i;
-                    var muteId = "#mute" + i;
-                    var programId = "#program" + i;
-                    var channelVolId = "#channelVol" + i;
-
-                    if(active_channels[i] != null){
-                        $(soloId).button("enable");
-                        $(muteId).button("enable");
-                        $(programId).removeAttr("disabled");
-                        var selector = "option[value='"  + active_channels[i] + "']"; 
-                        $(programId).find(selector).attr('selected',true);
-                        $(channelVolId).slider("enable");
-                        if($(channelId).hasClass("channel-inactive")){
-                            $(channelId).removeClass("channel-inactive");
-                        }
-                    }else{
-                        $(soloId).button("disable");
-                        $(muteId).button("disable");
-                        $(programId).prop("disabled","disabled");
-                        $(channelVolId).slider("disable");
-                        if(!($(channelId).hasClass("channel-inactive"))){
-                           $(channelId).addClass("channel-inactive");
-                        }
-                    }
+            if( $(this).is(':checked')){
+                player.pause(true);
+                if( $(soloId).is(':checked')){
                     $(soloId).prop("checked", false);
                     $(soloId).button("refresh");
+                    MIDI.channels[id].solo = false;
+                } 
+                MIDI.channels[id].mute = true;
+                player.resume();
+            }
+            else{
+                player.pause(true);
+                MIDI.channels[id].mute = false;
+                player.resume();
+            }
+
+        }); 
+
+        $("#"+soloId).change(function(){
+            var id = $(this).parents().eq(1).attr("id").replace(/\D/g,'');
+            var muteId = "#mute" + id;
+
+            if( $(this).is(':checked')){
+                player.pause(true);
+                if( $(muteId).is(':checked')){
                     $(muteId).prop("checked", false);
                     $(muteId).button("refresh");
 
-
-
-                }
+                    MIDI.channels[id].mute = false;
+                } 
+                MIDI.channels[id].solo = true;
+                player.resume();
+            }
+            else{
+                player.pause(true);
+                MIDI.channels[id].solo = false;
+                player.resume();
             }
 
-            // Toggle between Pause and Play modes.
+        }); 
+
+        //Set up Instrument Selector
+        var program = $('<select>')
+            .addClass("program")
+            .prop("disabled","disabled")
+            .attr("id","program"+i)
+            .append("<option value=\"0\">Acoustic Grand Piano</option>")
+            .append("<option value=\"6\">Harpsichord</option>")
+            .append("<option value=\"74\">Recorder</option>")
+            .change(function(){
+                player.pause(true);
+                var channel = $(this).parent().attr("id").replace(/\D/g,'');
+                var program = $(this).val();
+                MIDI.programChange(channel,program);
+                player.resume();
+            })
+        .appendTo(li);
+
+        var selector = "option[value='"  + defaultProgram + "']"; 
+        program.find(selector).attr('selected',true);
+        
+        //Set up channel Volume Slider
+        var slider = $('<div>')
+            .addClass("channelVol")
+            .attr("id","channelVol"+i)
+            .slider({
+                "range": "min", 
+                "min": 0,
+                "max": 127,
+                "value": MIDI.channels[i].volume,
+                "change": (function(event,ui){
+                    player.pause(true);
+                    var channel = $(this).parent().attr("id").replace(/\D/g,'');
+                    var volume = ui.value;
+                    MIDI.setVolume(channel,volume); 
+                    player.resume();
+                }),
+            })
+        .slider("disable")
+            .appendTo(li);
+    }
+
+}//end setupChannels
+
+//Makes Play and Stop buttons and player slider.
+function MIDIPlayerPercentage() {
+
+    $("#play").button({
+        text: false,
+        label: "play",
+        icons: { primary: "ui-icon-play" },
+    }).click( function(){
+        var options;
+        if ( $( this ).text() === "play" ) {
+            options = {
+                label: "pause",
+                icons: { primary: "ui-icon-pause" },
+            };
+            player.resume();
+        } else {
+            options = {
+                label: "play",
+                icons: { primary: "ui-icon-play" },
+            };
+            player.pause(true);
+        }
+        $( this ).button( "option", options );
+
+    }).button("disable");	
+
+    $("#stop").button({
+        text: false,
+        label: "stop",
+        icons: { primary: "ui-icon-stop" },
+    }).click( function(){
+        player.stop();
+        var options = {
+            label: "play",
+            icons: { primary: "ui-icon-play" },
+        }
+        $("#play").button("option",options);
+    }).button("disable");	
+	 
+    $("#capsule")
+        .slider({
+            "range": 'min',
+            "max": 100,
+            "min": 0,
+            "value": 0,
+            "slide": function(event,ui){
+                player.pause(true);
+                player.currentTime = ((ui.value/100)*player.endTime);
+                player.resume();
+            },
+            "disabled": true,
             
-            function load(event){
-                // load up the piano keys
-                var colors = $("#colors");
-                for (var n = 0; n < 88; n ++) {
-                    var key = $("<div>")
-                            .text(MIDI.noteToKey[n+21])
-                            .attr("id",n)
-                            .appendTo(colors);
+        })
+    .on("timeUpdate", function(event){
+       $(this).slider("value",(player.currentTime/player.endTime*100)); 
+       $("#time1").text(timeFormatting(player.currentTime));
+       $("#time2").text("-" + timeFormatting(player.endTime - player.currentTime));
+
+    });
+}//End MIDIPlayerPercentage()
+
+/* Helper Function for track slider */
+function timeFormatting(n) {
+    n = n/1000;
+    var minutes = n / 60 >> 0; 
+    var seconds = String(n - (minutes * 60) >> 0);
+    if (seconds.length == 1) seconds = "0" + seconds;
+    return minutes + ":" + seconds;
+};
+
+//sets up tempo, transpose, and start_stop slider
+function setupGlobalOptions(){
+    var tempo = $("#tempo").text("Tempo (%): ");
+    $("<input>")
+        .attr("type","number")
+        .attr("min","0")
+        .val(100)
+        .change(function(){
+            player.stop();
+            var tmp = $(this).val() / 100;
+            player.timeWarp = 1 / tmp; 
+            player.loadFile(currentSong,0,player.start);
+        })
+    .prop("disabled","disabled")
+        .appendTo(tempo);
+
+    var transpose = $("#transpose").text("Transpose (+/- semitone): ");
+    $("<input>")
+        .attr("type","number")
+        .val(0)
+        .change(function(){
+            player.pause(true);
+            player.MIDIOffset = parseInt($(this).val());
+            player.resume();
+        })
+    .prop("disabled","disabled")
+        .appendTo(transpose);
+
+    $("#start_stop_range")
+        .slider({
+            "min":1,
+            "max": 5,
+            "range":true,
+            "values":[1,5],
+            "slide": function(event,ui){
+                if(ui.values[1] - ui.values[0] > 0){
+                    $("#start_stop_text").text("Measures to Play: " 
+                        + ui.values[0] + " - " + ui.values[1]);
+                    return true;
+                }else{	
+                    return false; 
                 }
-		//NewPlayerLook
-			$("#previous").button({
-				text: false,
-				icons: { primary: "ui-icon-seek-start" },
-			}).click(function(){player.getNextSong(-1);});
-			$("#play").button({
-				text: false,
-				label: "play",
-				icons: { primary: "ui-icon-play" },
-			}).click( function(){
-				     var options;
-				     if ( $( this ).text() === "play" ) {
-				        options = {
-				          label: "pause",
-				          icons: {
-				            primary: "ui-icon-pause"
-				          }
-				        };
-					    player.resume();
-				      } else {
-				        options = {
-				          label: "play",
-				          icons: {
-				            primary: "ui-icon-play"
-				          }
-				        };
-					player.pause(true);
-				      }
-				      $( this ).button( "option", options );
-					
-				});	
-			$("#stop").button({
-				text: false,
-				label: "stop",
-				icons: { primary: "ui-icon-stop" },
-			}).click( function(){
-					player.stop();
-				        var options = {
-				          label: "play",
-				          icons: {
-				            primary: "ui-icon-play"
-				          }
-					}
-					$("#play").button("option",options);
-				});	
-			$("#next").button({
-				text: false,
-				icons: { primary: "ui-icon-seek-end" },
-			}).click(function(){player.getNextSong(+1);});
 
-                //
-                setUpChannels();
-                MIDI.loader = new widgets.Loader;
+            },
+            "change": function(event,ui){
+                player.firstMeasureToBePlayed = ui.values[0];
+                player.lastMeasureToBePlayed = ui.values[1];
+                player.stop();
+                player.resume();
+            },
+            "disabled": true,
+        });
+}//End setupGlobalOptions
 
-                MIDI.loadPlugin({ 
-		instruments: ["acoustic_grand_piano", "harpsichord", "recorder"],
-		callback: function () {
+//Shows info for song. 
+function showSongInfo(){
+    $("#tempo").removeAttr("disabled");
+    $("#transpose").removeAttr("disabled");
 
-                    // this is the language we are running in
+    var total_measures = player.measures.length - 1;
+    $("#start_stop_text").text("Measures to Play: 0 - " + total_measures);
+    $("#start_stop_range").slider({
+        "max": total_measures, 
+        "disabled": false,
+        "values": [1,total_measures],
+    });
 
-                    // this sets up the midiPlayer and gets things going...
-                 //   player = midiPlayer;
-                    player = new MidiPlayer;
-                    player.timeWarp = 1; // speed the song is played back EXPOSE!
-                    player.MIDIMasterVol = 100;
-                    currentSong = song[songid];
-                    player.loadFile(currentSong, 1);
-                    showSongInfo();
+    var active_channels = player.get_active_channels();
 
-                    // control the piano keys colors
-                    var colorMap = MusicTheory.Synesthesia.map();
+    for (var i = 0; i < 16; i++){
+        var channelId = "#channel" + i;
+        var soloId = "#solo" + i;
+        var muteId = "#mute" + i;
+        var programId = "#program" + i;
+        var channelVolId = "#channelVol" + i;
 
-                    player.addListener(function(data) {
-                        var pianoKey = "#" + (data.note - MIDI.pianoKeyOffset);
-                        if (data.metronome){
-                           $("#counter").text("Current Measure: " + data.metronome);  
-                        }else if (data.message === 144) {
-                            var map = colorMap[data.note - 27];
-                            if (map) $(pianoKey).css("background",map.hex);
-                            $(pianoKey).css("#fff");
-                        }else {
-                            $(pianoKey).css("background","").css("color","");
-                        }
-                    });
-                //
-                MIDIPlayerPercentage(player);
+        if(active_channels[i] != null){
+            $(soloId).button("enable");
+            $(muteId).button("enable");
+            $(programId).removeAttr("disabled");
+            var selector = "option[value='"  + active_channels[i] + "']"; 
+            $(programId).find(selector).attr('selected',true);
+            $(channelVolId).slider("enable");
+            if($(channelId).hasClass("channel-inactive")){
+                $(channelId).removeClass("channel-inactive");
+            }
+        }else{
+            $(soloId).button("disable");
+            $(muteId).button("disable");
+            $(programId).prop("disabled","disabled");
+            $(channelVolId).slider("disable");
+            if(!($(channelId).hasClass("channel-inactive"))){
+                $(channelId).addClass("channel-inactive");
+            }
+        }
+        $(soloId).prop("checked", false);
+        $(soloId).button("refresh");
+        $(muteId).prop("checked", false);
+        $(muteId).button("refresh");
 
-             // Setup the dnd listeners.
-var dropZone = document.getElementById('drop_zone');
-  dropZone.addEventListener('dragover', handleDragOver, false);
-  dropZone.addEventListener('dragleave', handleDragOut, false);
-  dropZone.addEventListener('drop', handleFileSelect, false);
 
-                //
-                MIDI.loader.stop();
+
+    }
+}//End showSongInfo
+
+            
+function load(){
+    // load up the piano keys
+    var colors = $("#colors");
+    for (var n = 0; n < 88; n ++) {
+        var key = $("<div>")
+            .text(MIDI.noteToKey[n+21])
+            .attr("id",n)
+            .appendTo(colors);
+    }
+
+    //Make the Widget!
+    MIDIPlayerPercentage();
+    makeMasterVolumeSlider();
+    setupGlobalOptions();
+    setupChannels();
+
+    // Setup the dnd listeners.
+    var dropZone = document.getElementById('drop_zone');
+    dropZone.addEventListener('dragover', handleDragOver, false);
+    dropZone.addEventListener('dragleave', handleDragOut, false);
+    dropZone.addEventListener('drop', handleFileSelect, false);
+
+    //cute loading widget
+    MIDI.loader = new widgets.Loader;
+
+    MIDI.loadPlugin({ 
+        instruments: ["acoustic_grand_piano", "harpsichord", "recorder"],
+        callback: function () {
+
+            player = new MidiPlayer;
+
+            player.timeWarp = 1; // speed the song is played back 
+            player.MIDIMasterVol = 100; //MasterVolume
+
+            var colorMap = MusicTheory.Synesthesia.map();
+
+            //updates Measure Counter and makes keys change color at the right time
+            player.addListener(function(data) {
+                var pianoKey = "#" + (data.note - MIDI.pianoKeyOffset);
+                if (data.metronome){
+                    $("#counter").text("Current Measure: " + data.metronome);  
+                }else if (data.message === 144) {
+                    var map = colorMap[data.note - 27];
+                    if (map) $(pianoKey).css("background",map.hex);
+                    $(pianoKey).css("#fff");
+                }else {
+                    $(pianoKey).css("background","").css("color","");
                 }
-	});
+            });
 
-            }
-            
-            function MIDIPlayerPercentage(player) {
+            //stop cute loading widget
+            MIDI.loader.stop();
+        }
+    });
 
-                // update the timestamp
-            	 
-                $("#capsule")
-                    .slider({
-                        "range": 'min',
-                        "max": 100,
-                        "min": 0,
-                        "value": 0,
-                        "slide": function(event,ui){
-                            player.pause(true);
-                            player.currentTime = ((ui.value/100)*player.endTime);
-                            player.resume();
-                        },
-                        
-                    })
-                .on("timeUpdate", function(event){
-                   $(this).slider("value",(player.currentTime/player.endTime*100)); 
-                    $("#time1").text(timeFormatting(player.currentTime));
-                    $("#time2").text("-" + timeFormatting(player.endTime - player.currentTime));
-
-                }) ;
-
-                function timeFormatting(n) {
-                    n = n/1000;
-                    var minutes = n / 60 >> 0; 
-                    var seconds = String(n - (minutes * 60) >> 0);
-                    if (seconds.length == 1) seconds = "0" + seconds;
-                    return minutes + ":" + seconds;
-                };
-
-                player.getNextSong = function(n) {
-                    var id = Math.abs((songid += n) % song.length);
-                    currentSong = song[id];
-                    player.timeWarp = 1;
-                    MIDI.channels = MIDI.initChannels();
-                    player.loadFile(currentSong, 1, start_stop); // load MIDI
-                    showSongInfo();
-                };
-
-                var myInterval = window.setInterval( function(){
-                    $("#capsule").trigger("timeUpdate");
-                    if (player.currentTime === player.endTime) { // go to next song
-                        var id = ++ songid % song.length;
-                        currentSong = song[id];
-                        player.timeWarp = 1;
-                        MIDI.channels = MIDI.initChannels();
-                        player.loadFile(currentSong, 1, player.start); // load MIDI
-                        showSongInfo();
-                    }
-                },204); 
-		function start_stop(){
-			player.stop();
-			player.start();
-		}
-
-            }
+}//End load
             
             
+            
+//clock for updating the track-capsule in player
+window.setInterval( function(){
+    $("#capsule").trigger("timeUpdate");
+},204); 
                 
-          $(window).load(load);
-            
-            ///////  ///////
-            
-            </script>
-        </head> 
-        <body id="drop_zone">
-            <div class="main" id="colors"></div>
-            <div id="block">
-               <!-- <div id="player" class="mplayer ui-widget-header ui-corner-all"> -->
-                <div id="player" class="mplayer ui-widget">
-		            <div class="buttons-container">
-<!--	    	     <button id="previous">previous song</button> -->
-		             <button id="play">play</button>
-		             <button id="stop">stop</button>
-<!--	             <button id="next">next song</button> -->
-		            </div>
-                    <span id="time1" class="currentTime">0:00</span>
-                    <div id="capsule" class="capsule"> </div> 
-                    <span id="time2" class="duration" >-0:00</span>
-                    <div class="masterVolumeContainer">
-	                    <div class="volume">
-                            <!-- <button id="volume"></button> -->
-                            <a href="" class="ui-state-default ui-corner-all ui-slider-handle"><span class="ui-icon ui-icon-volume-on" style="margin:2px"></span></a> 
+//run load function on load.
+$(window).load(load);
 
+</script>
 
-		                </div>
-		            </div>
+</head> 
 
-		    
-                </div> 
+<body id="drop_zone">
+    <div class="main" id="colors"></div>
+    <div id="block">
 
-                <div id="info">
-                    <div id="measure_stuff">
-                        <span id="start_stop_text">Measures to Play: 0 - End</span>
-                        <span id="counter">Current Measure: 0</span>
-                    </div>
-                        <div id="start_stop_range" class="start_stop_range"></div>
-                    <div id="global_options">
-                    <div id="transpose"></div>
-                    <div id="tempo"></div>
-                    </div>
-                    <div id="channels-block">
-                        <ul class="channels" style="float:left;">
-                            <li class="channel channel-title">
-                                <span class="channelNum">#</span>
-                                <span class="muteSolo">
-                                    <span class="muteSoloLabel">S</span> 
-                                    <span class="muteSoloLabel">M</span>
-                                </span>
-                                <span class="program">Instrument</span>
-                                <span class="trackVol">Channel Volume</span>
-                            </li>
-                            <li id="channel0" class="channel channel-inactive"></li>
-                            <li id="channel1" class="channel channel-inactive"></li> 
-                            <li id="channel2" class="channel channel-inactive"></li> 
-                            <li id="channel3" class="channel channel-inactive"></li> 
-                            <li id="channel4" class="channel channel-inactive"></li> 
-                            <li id="channel5" class="channel channel-inactive"></li> 
-                            <li id="channel6" class="channel channel-inactive"></li> 
-                            <li id="channel7" class="channel channel-inactive"></li> 
-                        </ul>
-                        <ul class="channels" style="float:right;">
-                            <li class="channel channel-title">
-                                <span class="channelNum">#</span>
-                                <span class="muteSolo">
-                                    <span class="muteSoloLabel">S</span> 
-                                    <span class="muteSoloLabel">M</span>
-                                </span>
-                                <span class="program">Instrument</span>
-                                <span class="trackVol">Channel Volume</span>
-                            </li>
-                            <li id="channel8" class="channel channel-inactive"></li> 
-                            <li id="channel9" class="channel channel-inactive"></li> 
-                            <li id="channel10" class="channel channel-inactive"></li> 
-                            <li id="channel11" class="channel channel-inactive"></li> 
-                            <li id="channel12" class="channel channel-inactive"></li> 
-                            <li id="channel13" class="channel channel-inactive"></li> 
-                            <li id="channel14" class="channel channel-inactive"></li> 
-                            <li id="channel15" class="channel channel-inactive"></li> 
-                        </ul>
-                    </div>
+        <div id="player" class="mplayer ui-widget">
+
+            <div class="buttons-container">
+                <button id="play">play</button>
+                <button id="stop">stop</button>
+            </div>
+
+            <span id="time1" class="currentTime">0:00</span>
+            <div id="capsule" class="capsule"> </div> 
+            <span id="time2" class="duration" >-0:00</span>
+
+            <div class="masterVolumeContainer">
+                <div class="volume">
+                    <a href="" class="ui-state-default ui-corner-all ui-slider-handle">
+                        <span class="ui-icon ui-icon-volume-on" style="margin:2px"></span>
+                    </a> 
                 </div>
-	        </div>
-	        <p id="drop_zone_message">
-            Drag and Drop Midi Files Anywhere.</br> Or Click to Upload: 
-            <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" /> 
-            </p>
+            </div>
+
+        </div><!-- end player div --> 
+
+        <div id="info">
+
+            <div id="measure_stuff">
+                <span id="start_stop_text">Measures to Play: 0 - End</span>
+                <span id="counter">Current Measure: 0</span>
+            </div>
+            <div id="start_stop_range" class="start_stop_range"></div>
+            <div id="global_options">
+                <div id="transpose"></div>
+                <div id="tempo"></div>
+            </div>
+
+            <div id="channels-block">
+                <ul id="channel-block-left" class="channels">
+                    <li class="channel channel-title">
+                    <span class="channelNum">#</span>
+                    <span class="soloMute">
+                        <span class="soloMuteLabel">S</span> 
+                        <span class="soloMuteLabel">M</span>
+                    </span>
+                    <span class="program">Instrument</span>
+                    <span class="channelVol">Channel Volume</span>
+                    </li>
+                    <li id="channel0" class="channel channel-inactive"></li>
+                    <li id="channel1" class="channel channel-inactive"></li> 
+                    <li id="channel2" class="channel channel-inactive"></li> 
+                    <li id="channel3" class="channel channel-inactive"></li> 
+                    <li id="channel4" class="channel channel-inactive"></li> 
+                    <li id="channel5" class="channel channel-inactive"></li> 
+                    <li id="channel6" class="channel channel-inactive"></li> 
+                    <li id="channel7" class="channel channel-inactive"></li> 
+                </ul>
+                <ul class="channels" id="channel-block-right">
+                    <li class="channel channel-title">
+                    <span class="channelNum">#</span>
+                    <span class="soloMute">
+                        <span class="soloMuteLabel">S</span> 
+                        <span class="soloMuteLabel">M</span>
+                    </span>
+                    <span class="program">Instrument</span>
+                    <span class="channelVol">Channel Volume</span>
+                    </li>
+                    <li id="channel8" class="channel channel-inactive"></li> 
+                    <li id="channel9" class="channel channel-inactive"></li> 
+                    <li id="channel10" class="channel channel-inactive"></li> 
+                    <li id="channel11" class="channel channel-inactive"></li> 
+                    <li id="channel12" class="channel channel-inactive"></li> 
+                    <li id="channel13" class="channel channel-inactive"></li> 
+                    <li id="channel14" class="channel channel-inactive"></li> 
+                    <li id="channel15" class="channel channel-inactive"></li> 
+                </ul>
+            </div> <!-- end channels-block div -->
+
+        </div><!-- end info div -->
+
+    </div><!-- end block div -->
+    <p id="drop_zone_message">
+        Drag and Drop Midi Files Anywhere.</br> Or Click to Upload: 
+        <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" /> 
+    </p>
 </body>
 </html>

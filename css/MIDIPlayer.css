@@ -1,44 +1,147 @@
+/* Add microphone and mute button to jquery ui */
+
+.ui-state-default .icon-microphone  { 
+    background-image:  url(../images/microphone-light.png) !important  }
+.ui-state-hover .icon-microphone, 
+.ui-state-focus .icon-microphone, 
+.ui-state-active .icon-microphone  { 
+    background-image:  url(../images/microphone-medium.png) !important  
+}
+
+.ui-state-highlight .ui-microphone {
+    background-image:  url(../images/microphone-blue.png) !important  
+}
+
+.ui-state-error .ui-microphone, 
+.ui-state-error-text .ui-microphone {
+    background-image:  url(../images/microphone-red.png) !important  
+}
+
+.ui-state-default .icon-mute  { background-image:  url(../images/mute-light.png) !important  
+}
+
+.ui-state-hover .icon-mute, 
+.ui-state-focus .icon-mute, 
+.ui-state-active .icon-mute  { 
+    background-image:  url(../images/mute-medium.png) !important  
+}
+
+.ui-state-highlight .ui-mute {
+    background-image:  url(../images/mute-blue.png) !important  
+}
+
+.ui-state-error .ui-mute, 
+.ui-state-error-text .ui-mute {
+    background-image:  url(../images/mute-red.png) !important  
+}
+
+/* Overall styles */
 html {
-    height: 100%;
+    height: 100%; /* So that you can drop anywhere! */
 }
 body {
-	margin: 0 0 0 30px;
-	font-family: Trebuchet MS;
-    height:100%;
+    margin: 0 0 0 30px;
+    font-family: Trebuchet MS; /*This font might not work everywhere... */
+    height:100%; /*So you can drop anywhere! */
 }
-#drop_zone_message{
-    text-align: right;
+
+/*Piano Styling. (Can't change name to piano because colors is used 
+ * somwhere other than the main html file... )*/
+
+#colors {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    z-index: 4; 
+    overflow: hidden;
 }
+
+#colors div {
+    padding: 1px 0 1px 5px; 
+    font-family: arial; 
+    font-size: 9px; 
+    line-height: 9px; 
+    color: #aaa; 
+    width: 30px; 
+    height: 9px; 
+    background: #000;
+}
+
+#block {
+    border: solid;
+    width: 80%;
+    margin: 25px auto;
+
+}
+
+
+/*These are classes because one day I could have more than one player on a page */
 .mplayer { 
-	position: relative; 
-	width: 50%; 
-	height: 2.5em; 
+    position: relative; 
+    width: 50%; 
+    height: 2.5em; 
     margin: 10px auto 10px auto;
 
 }
-.mplayer .buttons-container { position: absolute; top: 12px; left: 10px; }
+.mplayer .buttons-container { position: absolute;
+    top: 12px;
+    left: 10px;
+}
 
 .mplayer .buttons-container button {
-	height: 1.2em; width: 1.2em; display: inline-block;
-        position: relative; top: -2px; left: -2px;
-	
+    height: 1.2em;
+    width: 1.2em;
+    display: inline-block;
+    position: relative;
+    top: -2px;
+    left: -2px;
 }
-.mplayer .currentTime { position: absolute; top: 0.6em; left: 3.2em;
-        width: 3em; text-align: center; background: none; border: none; }
-.mplayer .duration { position: absolute; top: 0.6em; right: 1.6em;
-        width: 3em; text-align: center; background: none; border: none; }
 
-.mplayer .capsule .ui-slider-handle { border-left-width: 0; height: 1.1em; 
-        top: -0.24em; width: 2px; margin-left: -3px; }
+.mplayer .currentTime { 
+    position: absolute; 
+    top: 0.6em; 
+    left: 3.2em;
+    width: 3em; 
+    text-align: center; 
+    background: none; border: none; 
+}
 
-.mplayer .capsule { top: 16px; margin: -2px 4.6em 0 6.2em; 
-        border-style: solid;  }
+.mplayer .duration { 
+    position: absolute; 
+    top: 0.6em; 
+    right: 1.6em;
+    width: 3em; 
+    text-align: center; 
+    background: none; 
+    border: none; 
+}
 
+.mplayer .capsule .ui-slider-handle { 
+    border-left-width: 0; 
+    height: 1.1em; 
+    top: -0.24em;
+    width: 2px;
+    margin-left: -3px;
+}
 
-.mplayer .masterVolumeContainer { position: absolute; top: 18px; right: 0px; }
+.mplayer .capsule { 
+    top: 16px;
+    margin: -2px 4.6em 0 6.2em;
+    border-style: solid;  
+}
 
-.mplayer .volume { height: 0; margin-top: 5px; }
+.mplayer .masterVolumeContainer { 
+    position: absolute;
+    top: 18px;
+    right: 0px;
+}
 
+.mplayer .volume { 
+    height: 0;
+    margin-top: 5px;
+}
+
+/* styling measure counter and MeasuresToPlay Slider */
 #measure_stuff{
     width:80%;
     margin: 0 auto;
@@ -60,33 +163,18 @@ body {
     margin: 0 auto;
 
 }
-#start_stop_range .ui-slider-handle { border-left-width: 0; height: 1.1em; 
-        top: -0.24em; width: 5px; margin-left: -3px; }
-
-
-
-#block {
-border: solid;
-width: 80%;
-margin: 25px auto;
-
+#start_stop_range .ui-slider-handle { 
+    border-left-width: 0;
+    height: 1.1em;
+    top: -0.24em;
+    width: 5px;
+    margin-left: -3px;
+    
 }
 
-#colors div {
-	-webkit-transition-property: background, color;
-	-webkit-transition-duration: .25s;
-    padding: 1px 0 1px 5px; 
-    font-family: arial; 
-    font-size: 9px; 
-    line-height: 9px; 
-    color: #aaa; 
-    width: 30px; 
-    height: 9px; 
-	background: #000;
-	background-image: -webkit-gradient(linear,left top,left bottom,from(rgba(66,66,66,0.75)),to(rgba(0,0,0,1)));
-    border-bottom: 1px solid rgba(5,5,5,0.7);
-}
 
+
+/* transpose and tempo stylings. Only one so id. */
 #global_options{
     border:0px;
     margin:20px auto 20px auto;
@@ -95,25 +183,36 @@ margin: 25px auto;
     position: relative;
 }
 #transpose{
-   position: absolute; 
-   left: 0;
+    position: absolute; 
+    left: 0;
 }
 #tempo{
-   position: absolute; 
-   right: 0;
+    position: absolute; 
+    right: 0;
 }
 
+/*channel stuff */
 #channels-block{
-height: 265px;
-}
-.channels{
-width:50%;
-list-style-type: none;
-padding:0px;
-margin-top:0px;
+    height: 265px;
 }
 
-.channel{
+.channels{
+    width:50%;
+    list-style-type: none;
+    padding:0px;
+    margin-top:0px;
+}
+
+/*So I don't have styles in the main html file */
+#channel-block-right{
+    float:right;
+}
+
+#channel-block-left{
+    float:left;
+}
+
+.channel{ /*every li has this class */
     position: relative;
     margin: 30px 5px 30px 10px;
 }
@@ -121,6 +220,7 @@ margin-top:0px;
 .channel-inactive{
     color:gray;
 }
+
 .channel-title{
     text-align: center;
     margin-top:0px;
@@ -130,14 +230,14 @@ margin-top:0px;
     position: absolute;
     left:0;
 }
-.channel .muteSolo{
+.channel .soloMute{
     position: absolute; top: 0px; left: 1.5em; 
 }
 
-.channel .muteSolo .muteSoloLabel {
-	height: 1.2em; width: 1.2em; display: inline-block;
-        position: relative; top: 0px; left: -2px;
-	
+.channel .soloMute .soloMuteLabel {
+    height: 1.2em; width: 1.2em; display: inline-block;
+    position: relative; top: 0px; left: -2px;
+
 }
 
 .channel .program{
@@ -145,41 +245,11 @@ margin-top:0px;
     left: 5.7em;
 }
 
-.channel .trackVol{
+.channel .channelVol{
     margin: -1em 1em 1em 13.5em
 }
 
-div.main {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    z-index: 4; 
-    border-radius: 5px; 
-    overflow: hidden;
-}
-div.thing1 {
-    text-align: center; 
-    border-radius: 5px; 
-    position: absolute; 
-    top: -70px; 
-    left: -40px; 
-    opacity: 0.9;
-}
-div.thing2{
-    margin-bottom: 50px; 
-    border: 1px solid #000;
-    background: rgba(255,255,255,0.5);
-    border-radius: 10px;
-    float: left;
-    width: 800px;
-    padding-bottom: 100px;
-    position: relative;
-    z-index: 2;
-}
-#title{
-    background: rgba(255,255,0,0.5); 
-    position: relative;
-    color: #000; 
-    z-index: -1;
-    padding: 5px 11px 5px;
+/*message at the bottom */
+#drop_zone_message{
+    text-align: right;
 }
