@@ -197,11 +197,10 @@ text-align: center;
 
 /*channel stuff */
 #channels-block{
-    height: 350px;
 }
 
 .channels{
-    width:50%;
+    width:49%;
     list-style-type: none;
     padding:0px;
     margin-top:0px;
@@ -209,11 +208,11 @@ text-align: center;
 
 /*So I don't have styles in the main html file */
 #channel-block-right{
-    float:right;
+  display: inline-block;
 }
 
 #channel-block-left{
-    float:left;
+  display: inline-block;
 }
 
 .channel{ /*every li has this class */
