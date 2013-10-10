@@ -47,12 +47,13 @@ function readFile(f){
         currentSong = reader.result;
         player.timeWarp = 1;
         MIDI.channels = MIDI.initChannels();
-        player.loadFile(currentSong,1); 
-        showSongInfo();
-        $("#play").button("enable");
-        $("#stop").button("enable");
-        $("#capsule").slider("enable");
-        $(".mplayer .volume").slider("enable");
+        player.loadFile(currentSong,1,function(){
+            showSongInfo();
+            $("#play").button("enable");
+            $("#stop").button("enable");
+            $("#capsule").slider("enable");
+            $(".mplayer .volume").slider("enable");
+        }); 
     }
     reader.onerror = function(e) {
         alert("Error!: " + e);
@@ -105,7 +106,7 @@ function makeMasterVolumeSlider(){
                 }).find('.ui-slider-range').show();
             },
             slide: function(event, ui) {
-                player.pause(true);
+                //player.pause(true);
                 $(this).css({ 'height': '100px' }).find('.ui-slider-range').show();
             },
             stop: function(event, ui) {
@@ -120,9 +121,11 @@ function makeMasterVolumeSlider(){
             change: function(event, ui) {
                 if (ui.value >= 0 && ui.value <= 100) {
                     if (ui.value != player.MIDIMasterVol ) {
-                        player.pause(true);
                         player.MIDIMasterVol = ui.value;
-                        player.resume();
+                        if(player.playing){
+                            player.pause(true);
+                            player.resume();
+                        }
                     }
                 }
             }
@@ -205,19 +208,24 @@ function setupChannels(){
             var soloId = "#solo" + id;
 
             if( $(this).is(':checked')){
-                player.pause(true);
                 if( $(soloId).is(':checked')){
                     $(soloId).prop("checked", false);
                     $(soloId).button("refresh");
                     MIDI.channels[id].solo = false;
                 } 
                 MIDI.channels[id].mute = true;
-                player.resume();
+                
+                if(player.playing){
+                    player.pause(true);
+                    player.resume();
+                }
             }
             else{
-                player.pause(true);
                 MIDI.channels[id].mute = false;
-                player.resume();
+                if(player.playing){
+                    player.pause(true);
+                    player.resume();
+                }
             }
 
         }); 
@@ -227,7 +235,6 @@ function setupChannels(){
             var muteId = "#mute" + id;
 
             if( $(this).is(':checked')){
-                player.pause(true);
                 if( $(muteId).is(':checked')){
                     $(muteId).prop("checked", false);
                     $(muteId).button("refresh");
@@ -235,12 +242,17 @@ function setupChannels(){
                     MIDI.channels[id].mute = false;
                 } 
                 MIDI.channels[id].solo = true;
-                player.resume();
+                if(player.playing){
+                    player.pause(true);
+                    player.resume();
+                    }
             }
             else{
-                player.pause(true);
                 MIDI.channels[id].solo = false;
-                player.resume();
+                if(player.playing){
+                    player.pause(true);
+                    player.resume();
+                }
             }
 
         }); 
@@ -254,11 +266,13 @@ function setupChannels(){
             .append("<option value=\"6\">Harpsichord</option>")
             .append("<option value=\"74\">Recorder</option>")
             .change(function(){
-                player.pause(true);
                 var channel = $(this).parent().attr("id").replace(/\D/g,'');
                 var program = $(this).val();
                 MIDI.programChange(channel,program);
-                player.resume();
+                if(player.playing){
+                    player.pause(true);
+                    player.resume();
+                }
             })
         .appendTo(li);
 
@@ -275,11 +289,13 @@ function setupChannels(){
                 "max": 127,
                 "value": MIDI.channels[i].volume,
                 "change": (function(event,ui){
-                    player.pause(true);
                     var channel = $(this).parent().attr("id").replace(/\D/g,'');
                     var volume = ui.value;
                     MIDI.setVolume(channel,volume); 
-                    player.resume();
+                    if(player.playing){
+                        player.pause(true);
+                        player.resume();
+                    }
                 }),
             })
         .slider("disable")
@@ -337,6 +353,11 @@ function MIDIPlayerPercentage() {
                 player.pause(true);
                 player.currentTime = ((ui.value/100)*player.endTime);
                 player.resume();
+                var options = {
+                    label: "pause",
+                    icons: { primary: "ui-icon-pause" },
+                };
+                $("#play").button("option",options);
             },
             "disabled": true,
             
@@ -369,7 +390,7 @@ function setupGlobalOptions(){
             player.stop();
             var tmp = $(this).val() / 100;
             player.timeWarp = 1 / tmp; 
-            player.loadFile(currentSong,0,player.start);
+            player.loadFile(currentSong,0);
         })
     .prop("disabled","disabled")
         .appendTo(tempo);
@@ -379,9 +400,11 @@ function setupGlobalOptions(){
         .attr("type","number")
         .val(0)
         .change(function(){
-            player.pause(true);
             player.MIDIOffset = parseInt($(this).val());
-            player.resume();
+            if(player.playing){
+                player.pause(true);
+                player.resume();
+            }
         })
     .prop("disabled","disabled")
         .appendTo(transpose);
@@ -405,8 +428,19 @@ function setupGlobalOptions(){
             "change": function(event,ui){
                 player.firstMeasureToBePlayed = ui.values[0];
                 player.lastMeasureToBePlayed = ui.values[1];
-                player.stop();
-                player.resume();
+                if(player.playing){
+                    player.stop();
+                    player.resume();
+                }else{ 
+                    player.stop(); 
+                    var options = {
+                        label: "play",
+                        icons: { primary: "ui-icon-play" },
+                    }
+                    $("#play").button("option",options);
+                
+                }
+
             },
             "disabled": true,
         });
@@ -414,8 +448,8 @@ function setupGlobalOptions(){
 
 //Shows info for song. 
 function showSongInfo(){
-    $("#tempo").removeAttr("disabled");
-    $("#transpose").removeAttr("disabled");
+    $("#tempo").children().removeAttr("disabled").val(100);
+    $("#transpose").children().removeAttr("disabled").val(1);
 
     var total_measures = player.measures.length - 1;
     $("#start_stop_text").text("Measures to Play: 0 - " + total_measures);
@@ -527,10 +561,23 @@ function load(){
 window.setInterval( function(){
     $("#capsule").trigger("timeUpdate");
 },204); 
+
                 
 //run load function on load.
 $(window).load(load);
 
+function playFile(f){
+    player.timeWarp = 1;
+    MIDI.channels = MIDI.initChannels();
+    player.loadFile(f,1,function(){
+        showSongInfo();
+        $("#play").button("enable");
+        $("#stop").button("enable");
+        $("#capsule").slider("enable");
+        $(".mplayer .volume").slider("enable");
+        $("#start_stop").slider("values",1,player.lastMeasureToBePlayed);
+    });
+}
 </script>
 
 </head> 
@@ -618,7 +665,11 @@ $(window).load(load);
     </div><!-- end block div -->
     <p id="drop_zone_message">
         Drag and Drop Midi Files Anywhere.</br> Or Click to Upload: 
-        <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" /> 
+        <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" /><br>
+        <a href="javascript:void(playFile('278.mid'))">Other File</a><br>
+        
+        <a href="tantara_cries_mars.mid">tantara</a>
+
     </p>
 </body>
 </html>
