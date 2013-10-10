@@ -2,9 +2,11 @@
 <html xmlns = "http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-        <title>MIDI.js - Sequencing in Javascript.</title>
+	<meta name="viewport" content="width=device-width" />
+        <title>TunaMidi</title>
         <!-- midi.js css -->
         <link href="./css/MIDIPlayer.css" rel="stylesheet" type="text/css" />
+        <link media="only screen and (max-width: 480px), only screen and (max-device-width: 480px)" href="./css/MIDIPlayerPhone.css" rel="stylesheet" type="text/css" /> 
         <link href="./jquery/css/smoothness/jquery-ui-1.10.3.custom.css" rel="stylesheet" type="text/css" />
 
         <!-- midi.js package -->
@@ -22,6 +24,7 @@
         <!-- jquery package -->
 		<script src="jquery/js/jquery-1.9.1.js"></script>
 		<script src="jquery/js/jquery-ui-1.10.3.custom.js"></script>
+		<script src="jquery/js/jquery.ui.touch-punch.min.js"></script>
 
 
         <!-- jasmid package -->
@@ -53,6 +56,7 @@ function readFile(f){
             $("#stop").button("enable");
             $("#capsule").slider("enable");
             $(".mplayer .volume").slider("enable");
+	    $(".channelVol.ui-slider").slider("value",127);
         }); 
     }
     reader.onerror = function(e) {
@@ -391,6 +395,11 @@ function setupGlobalOptions(){
             var tmp = $(this).val() / 100;
             player.timeWarp = 1 / tmp; 
             player.loadFile(currentSong,0);
+            var options = {
+                label: "play",
+                icons: { primary: "ui-icon-play" },
+            }
+            $("#play").button("option",options);
         })
     .prop("disabled","disabled")
         .appendTo(tempo);
@@ -520,6 +529,11 @@ function load(){
     dropZone.addEventListener('dragleave', handleDragOut, false);
     dropZone.addEventListener('drop', handleFileSelect, false);
 
+	$("#midiURLForm").submit(function() {
+		playFile();
+   	 	return false;
+	});
+
     //cute loading widget
     MIDI.loader = new widgets.Loader;
 
@@ -567,6 +581,7 @@ window.setInterval( function(){
 $(window).load(load);
 
 function playFile(f){
+    if(!f){ f = $("#midiURL").val();}
     player.timeWarp = 1;
     MIDI.channels = MIDI.initChannels();
     player.loadFile(f,1,function(){
@@ -576,14 +591,17 @@ function playFile(f){
         $("#capsule").slider("enable");
         $(".mplayer .volume").slider("enable");
         $("#start_stop").slider("values",1,player.lastMeasureToBePlayed);
+	$(".channelVol.ui-slider").slider("value",127);
     });
 }
+
 </script>
 
 </head> 
 
 <body id="drop_zone">
     <div class="main" id="colors"></div>
+<h1>TunaMidi <span><img src="images/tuna.png" height="40px"></span></h1>
     <div id="block">
 
         <div id="player" class="mplayer ui-widget">
@@ -610,8 +628,8 @@ function playFile(f){
         <div id="info">
 
             <div id="measure_stuff">
-                <span id="start_stop_text">Measures to Play: 0 - End</span>
-                <span id="counter">Current Measure: 0</span>
+                <div id="start_stop_text">Measures to Play: 0 - End</div>
+                <div id="counter">Current Measure: 0</div>
             </div>
             <div id="start_stop_range" class="start_stop_range"></div>
             <div id="global_options">
@@ -663,13 +681,14 @@ function playFile(f){
         </div><!-- end info div -->
 
     </div><!-- end block div -->
-    <p id="drop_zone_message">
-        Drag and Drop Midi Files Anywhere.</br> Or Click to Upload: 
-        <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" /><br>
-        <a href="javascript:void(playFile('278.mid'))">Other File</a><br>
+    <div id="drop_zone_message">
+        Drag and Drop Midi Files Anywhere.</br> 
+	Or Click to Upload: <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" /><br>
+	<form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL"> <input type="submit"></form>	
+        <a href="javascript:void(playFile('tantara_cries_mars.mid'))">Tantara Cries Mars</a><br>
         
-        <a href="tantara_cries_mars.mid">tantara</a>
+ <!--       <a href="tantara_cries_mars.mid">tantara</a> -->
 
-    </p>
+    </div>
 </body>
 </html>

@@ -42,11 +42,8 @@ html {
 body {
     margin: 0 0 0 30px;
     font-family: Trebuchet MS; /*This font might not work everywhere... */
+    font-size: 250%;
     height:100%; /*So you can drop anywhere! */
-    overflow: hidden;
-}
-h1 {
-text-align: center;
 }
 
 /*Piano Styling. (Can't change name to piano because colors is used 
@@ -72,9 +69,9 @@ text-align: center;
 }
 
 #block {
-    border: solid;
-    width: 80%;
-    margin: 25px auto;
+  /*  border: solid; */
+    width: 95%;
+    margin: 10px auto;
 
 }
 
@@ -82,8 +79,8 @@ text-align: center;
 /*These are classes because one day I could have more than one player on a page */
 .mplayer { 
     position: relative; 
-    width: 50%; 
-    height: 2.5em; 
+    width: 100%; 
+    height: 3.5em; 
     margin: 10px auto 10px auto;
 
 }
@@ -93,8 +90,8 @@ text-align: center;
 }
 
 .mplayer .buttons-container button {
-    height: 1.2em;
-    width: 1.2em;
+    height: 2.2em;
+    width: 2.2em;
     display: inline-block;
     position: relative;
     top: -2px;
@@ -104,7 +101,7 @@ text-align: center;
 .mplayer .currentTime { 
     position: absolute; 
     top: 0.6em; 
-    left: 3.2em;
+    left: 5.2em;
     width: 3em; 
     text-align: center; 
     background: none; border: none; 
@@ -130,7 +127,7 @@ text-align: center;
 
 .mplayer .capsule { 
     top: 16px;
-    margin: -2px 4.6em 0 6.2em;
+    margin: -2px 4.6em 0 8.2em;
     border-style: solid;  
 }
 
@@ -147,23 +144,16 @@ text-align: center;
 
 /* styling measure counter and MeasuresToPlay Slider */
 #measure_stuff{
-    width:80%;
     margin: 0 auto;
-    position:relative;
-    height:2.2em;
 }
 #start_stop_text{
-    position:absolute;
-    left:0;
+display:block;
 }
 #counter{
-
-    position:absolute;
-    left:50%;
-    margin-left:-4em;
+display:block;
 }
 #start_stop_range{
-    width: 80%;
+    width: 100%;
     margin: 0 auto;
 
 }
@@ -180,28 +170,25 @@ text-align: center;
 
 /* transpose and tempo stylings. Only one so id. */
 #global_options{
-    border:0px;
-    margin:20px auto 20px auto;
-    width:600px;
-    height:2.2em;
-    position: relative;
+    
+    margin:20px auto;
 }
-#transpose{
-    position: absolute; 
-    left: 0;
+#transpose input{
+    height: 4em;
+    width: 20em;
 }
-#tempo{
-    position: absolute; 
-    right: 0;
+#tempo input{
+    height: 4em;
+    width: 20em;
 }
 
 /*channel stuff */
 #channels-block{
-    height: 350px;
+ /*   height: 265px; */
 }
 
 .channels{
-    width:50%;
+    width:100%;
     list-style-type: none;
     padding:0px;
     margin-top:0px;
@@ -209,16 +196,15 @@ text-align: center;
 
 /*So I don't have styles in the main html file */
 #channel-block-right{
-    float:right;
 }
 
 #channel-block-left{
-    float:left;
 }
 
 .channel{ /*every li has this class */
     position: relative;
-    margin: 5px; 
+    width:100%;
+    margin: 200px 5px 130px 20px;
 }
 
 .channel-inactive{
@@ -226,37 +212,32 @@ text-align: center;
 }
 
 .channel-title{
-    display: inline-block;
-    text-align: center;
-    margin-top:0px;
+display:none;
 }
 
 .channel .channelNum{
-/*    position: absolute;
-    left:0; */
-    display:inline-block;
-    margin: 0 10px 0 0;
+    position: absolute;
+    left:0;
 }
 .channel .soloMute{
-/*    position: absolute; top: 0px; left: 1.5em;  */
-    display:inline-block;
+    position: absolute; top: 0px; left: 1.5em; 
 }
 
 .channel .soloMute .soloMuteLabel {
-    height: 1.2em; width: 1.2em; 
-    display: inline-block;
+    height: 2.2em; width: 2.2em; display: inline-block;
     position: relative; top: 0px; left: -2px;
 
 }
 
 .channel .program{
-   /* position: absolute; 
-    left: 5.7em; */
-    display:inline-block;
+    position: absolute;
+    left: 20em;
+    height: 4em;
+    width: 20em;
 }
 
 .channel .channelVol{
-    margin: -1em 1em 1em 13.5em
+    margin: -1em 1em 1em 22em
 }
 
 /*message at the bottom */
