@@ -458,7 +458,7 @@ function setupGlobalOptions(){
 //Shows info for song. 
 function showSongInfo(){
     $("#tempo").children().removeAttr("disabled").val(100);
-    $("#transpose").children().removeAttr("disabled").val(1);
+    $("#transpose").children().removeAttr("disabled").val(0);
 
     var total_measures = player.measures.length - 1;
     $("#start_stop_text").text("Measures to Play: 0 - " + total_measures);
