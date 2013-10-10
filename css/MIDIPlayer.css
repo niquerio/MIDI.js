@@ -43,6 +43,7 @@ body {
     margin: 0 0 0 30px;
     font-family: Trebuchet MS; /*This font might not work everywhere... */
     height:100%; /*So you can drop anywhere! */
+    overflow: hidden;
 }
 
 /*Piano Styling. (Can't change name to piano because colors is used 
