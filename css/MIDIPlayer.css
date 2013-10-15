@@ -43,7 +43,6 @@ body {
     margin: 0 0 0 30px;
     font-family: Trebuchet MS; /*This font might not work everywhere... */
     height:100%; /*So you can drop anywhere! */
-    overflow: hidden;
 }
 h1 {
 text-align: center;
@@ -139,6 +138,9 @@ text-align: center;
     top: 18px;
     right: 0px;
 }
+.mplayer .masterVolumeContainer .ui-icon { 
+	margin:2px;
+}
 
 .mplayer .volume { 
     height: 0;
@@ -198,10 +200,10 @@ text-align: center;
 /*channel stuff */
 #channels-block{
 }
-
+td, th{
+}
 .channels{
     width:49%;
-    list-style-type: none;
     padding:0px;
     margin-top:0px;
 }
@@ -215,48 +217,39 @@ text-align: center;
   display: inline-block;
 }
 
-.channel{ /*every li has this class */
+.channel{ 
     position: relative;
     margin: 5px; 
 }
 
-.channel-inactive{
+.inactive{
     color:gray;
 }
 
+/*
 .channel-title{
-    display: inline-block;
     text-align: center;
     margin-top:0px;
 }
+*/
 
 .channel .channelNum{
-/*    position: absolute;
-    left:0; */
-    display:inline-block;
-    margin: 0 10px 0 0;
-}
-.channel .soloMute{
-/*    position: absolute; top: 0px; left: 1.5em;  */
-    display:inline-block;
+
 }
 
-.channel .soloMute .soloMuteLabel {
-    height: 1.2em; width: 1.2em; 
-    display: inline-block;
-    position: relative; top: 0px; left: -2px;
+.channel .soloMute {
+    height: 1.2em; width: 1.2em;  
 
 }
 
 .channel .program{
-   /* position: absolute; 
-    left: 5.7em; */
-    display:inline-block;
 }
 
 .channel .channelVol{
-    margin: -1em 1em 1em 13.5em
+white-space:normal;
+width:95%;
 }
+
 
 /*message at the bottom */
 #drop_zone_message{

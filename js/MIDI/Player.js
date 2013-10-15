@@ -24,6 +24,7 @@ function MidiPlayer(){
     this.MIDIMasterVol = 100; //Master Volume
     this.MIDIOffset = 0; //transpose by this number of semitones;
     this.data = []; //array with linearized midifile
+    this.channels = {}; 
 
     //Private Variables
     var eventQueue = []; // hold events to be triggered
@@ -173,7 +174,7 @@ function MidiPlayer(){
     function initChannelPrograms(){
         for(var n = 0; n < active_channels.length; n++){
             if(active_channels[n] == 0 || active_channels[n] == 6 || active_channels[n] == 74){	
-                MIDI.programChange(n,active_channels[n]);
+                self.channels[n]['instrument'] = active_channels[n];
             }
         }
 
@@ -276,13 +277,16 @@ function MidiPlayer(){
             switch (event.subtype) {
                 case 'noteOn':
                     //MUTE
-                    if (MIDI.channels[channel].mute) break;
+                    if (self.channels[channel].mute) break;
+                    //if (MIDI.channels[channel].mute) break;
 
                     //SOLO
                     otherSoloFlag = false;
-                    if (!MIDI.channels[channel].solo){
+                    if (!self.channels[channel].solo){
+                    //if (!MIDI.channels[channel].solo){
                         for(var i = 0; i < 16; i++){
-                            if(MIDI.channels[i].solo) {otherSoloFlag = true; break;}
+                            if(self.channels[i].solo) {otherSoloFlag = true; break;}
+                            //if(MIDI.channels[i].solo) {otherSoloFlag = true; break;}
                         }
                     }
                     if(otherSoloFlag) break; 
@@ -296,7 +300,8 @@ function MidiPlayer(){
                     eventQueue.push({
                         event: event,
                         //play note;
-                        source: MIDI.noteOn(channel, note, velocity, currentTime / 1000 + ctx.currentTime),
+                        source: MIDI.noteOn(channel, note, velocity, currentTime / 1000 + ctx.currentTime, 
+                                             self.channels[channel].instrument, self.channels[channel].volume),
                         //info for callback 
                         interval: scheduleTracking(false, channel, note, queuedTime, offset, 144, velocity )
                     });
@@ -304,12 +309,15 @@ function MidiPlayer(){
                     break;
                 case 'noteOff':
                     //MUTE
-                    if (MIDI.channels[channel].mute) break;
+                    if (self.channels[channel].mute) break;
+                    //if (MIDI.channels[channel].mute) break;
                     //SOLO
                     otherSoloFlag = false;
-                    if (!MIDI.channels[channel].solo){
+                    if (!self.channels[channel].solo){
+                    //if (!MIDI.channels[channel].solo){
                         for(var i = 0; i < 16; i++){
-                            if(MIDI.channels[i].solo) {otherSoloFlag = true; break;}
+                            if(self.channels[i].solo) {otherSoloFlag = true; break;}
+                            //if(MIDI.channels[i].solo) {otherSoloFlag = true; break;}
                         }
                     }
                     if(otherSoloFlag) break; 
@@ -434,6 +442,22 @@ function MidiPlayer(){
         };
         fetch.send();
     }; //End loadFile
+
+    this.initChannels = function() { // 0 - 15 channels
+	self.channels = {};
+	for (var n = 0; n < 16; n++) {
+		self.channels[n] = { // default values
+			instrument: 0,
+			// Acoustic Grand Piano
+			mute: false,
+			mono: false,
+			omni: false,
+			solo: false,
+                        volume: 127,
+		};
+	}
+};
+
 
 }
 

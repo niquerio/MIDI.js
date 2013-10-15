@@ -29,16 +29,19 @@ body {
 
 /*These are classes because one day I could have more than one player on a page */
 .mplayer { 
-    width: 90%; 
+    width: 95%; 
 
 }
 .mplayer .buttons-container { position: absolute;
 }
 
 .mplayer .buttons-container button {
+	height:2em;
+	width:2em;
 }
 
 .mplayer .currentTime { 
+	left:4.7em;
 }
 
 .mplayer .duration { 
@@ -48,11 +51,24 @@ body {
 }
 
 .mplayer .capsule { 
+	margin: -0px 4.6em 0 7.8em;
 }
 
 .mplayer .masterVolumeContainer { 
+	top: 28px;
+}
+.mplayer .masterVolumeContainer .ui-icon { 
+	margin:8px;
 }
 
+.mplayer .masterVolumeContainer .ui-slider-handle { 
+	height:2em;
+	width:2em;
+	
+}
+.mplayer .masterVolumeContainer .ui-slider-vertical .ui-slider-handle { 
+	margin-left: -5px;	
+}
 .mplayer .volume { 
 }
 
@@ -106,48 +122,42 @@ height: auto;
 
 .channels{
     width:100%;
-    list-style-type: none;
     padding:0px;
     margin-top:0px;
 }
 
 /*So I don't have styles in the main html file */
 #channel-block-right{
-float:none;
 }
 
 #channel-block-left{
-float:none;
 }
 
 #channel-block-right .channel-title{
 display:none;
 }
 
-.channel{ /*every li has this class */
-    position: relative;
+.channel{ /*every td has this class */
 }
 
-.channel-inactive{
+.inactive{
 }
 
 .channel-title{
-    display: none;
 }
 
 .channel .channelNum{
 }
 .channel .soloMute{
+    height: 2em; width: 2em;  
 }
 
-.channel .soloMute .soloMuteLabel {
-
-}
 
 .channel .program{
 }
 
 .channel .channelVol{
+
 }
 
 /*message at the bottom */
