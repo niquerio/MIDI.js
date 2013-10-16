@@ -173,9 +173,9 @@ function MidiPlayer(){
     //changes program if program is one of the loaded ones. 
     function initChannelPrograms(){
         for(var n = 0; n < active_channels.length; n++){
-            if(active_channels[n] == 0 || active_channels[n] == 6 || active_channels[n] == 74){	
+        //    if(active_channels[n] == 0 || active_channels[n] == 6 || active_channels[n] == 74){	
                 self.channels[n]['instrument'] = active_channels[n];
-            }
+        //    }
         }
 
     }
