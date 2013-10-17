@@ -1,3 +1,9 @@
+//What comes next:
+//-use channels option
+//-figure out how to show channels 'n' stuff;
+//-move the channels stuff to a helper function.
+//-figure out what functions I need.
+
 (function($) {
 
     $.widget("ui.midiPlayer", {

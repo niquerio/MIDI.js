@@ -11,15 +11,17 @@
 
         <!-- midi.js package -->
         <script src="./js/Color/SpaceW3.js" type="text/javascript"></script>
+        <script src="./js/MusicTheory/Synesthesia.js" type="text/javascript"></script>
         <script src="./js/MIDI/AudioDetect.js" type="text/javascript"></script>
-        <script src="./js/MIDI/LoadPlugin.js" type="text/javascript"></script>
+        <script src="./js/MIDI/LoadPlugin2.js" type="text/javascript"></script>
         <script src="./js/MIDI/Plugin.js" type="text/javascript"></script>
         <script src="./js/MIDI/Player.js" type="text/javascript"></script>
-        <script src="./js/MusicTheory/Synesthesia.js" type="text/javascript"></script>
         <script src="./js/Widgets/Loader.js" type="text/javascript"></script>
 
-        <!-- maybe I can get rid of these when I've switched everything to jquery?? -->
+        <!-- maybe I can get rid of these when I've switched everything to jquery?? 
         <script src="./js/Window/DOMLoader.script.js" type="text/javascript"></script> 
+        <script src="./js/MIDI/LoadPlugin.js" type="text/javascript"></script>
+        -->
 
         <!-- jquery package -->
 		<script src="jquery/js/jquery-1.9.1.js"></script>
@@ -565,6 +567,7 @@ function load(){
     MIDI.loader = new widgets.Loader;
 
     MIDI.loadPlugin({ 
+        //instruments: "acoustic_grand_piano",
         instruments: ["acoustic_grand_piano", "harpsichord", "recorder"],
         callback: function () {
 
@@ -637,6 +640,7 @@ function add_instruments(){
                    .val(inst_number)
                    .text(inst_name)
     	       .appendTo("select.program");
+               $("#add_instruments_select option[value='"+ instrument +"']").remove();
                 MIDI.loader.stop();
     	    }
     	});

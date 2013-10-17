@@ -17,8 +17,7 @@ if (typeof (MIDI.Soundfont) === "undefined") MIDI.Soundfont = {};
 (function() { "use strict";
 
 // Turn on to get "onprogress" event. XHR will not work from file://
-var USE_XHR = false; 
-var USE_JAZZMIDI = false;
+//var USE_JAZZMIDI = false;
 
 MIDI.loadPlugin = function(conf) {
 	if (typeof(conf) === "function") conf = {
@@ -44,8 +43,8 @@ MIDI.loadPlugin = function(conf) {
 			api = conf.api;
 		} else if (apis[window.location.hash.substr(1)]) {
 			api = window.location.hash.substr(1);
-		} else if (USE_JAZZMIDI && navigator.requestMIDIAccess) {
-			api = "webmidi";
+//		} else if (USE_JAZZMIDI && navigator.requestMIDIAccess) {
+//			api = "webmidi";
 		} else if (window.webkitAudioContext) { // Chrome
 			api = "webaudio";
 		} else if (window.Audio) { // Firefox
@@ -67,21 +66,21 @@ MIDI.loadPlugin = function(conf) {
 
 var connect = {};
 
-connect.webmidi = function(filetype, instruments, conf) {
-	if (MIDI.loader) MIDI.loader.message("Web MIDI API...");
-	MIDI.WebMIDI.connect(conf);
-};
+//connect.webmidi = function(filetype, instruments, conf) {
+//	if (MIDI.loader) MIDI.loader.message("Web MIDI API...");
+//	MIDI.WebMIDI.connect(conf);
+//};
 
 connect.flash = function(filetype, instruments, conf) {
 	// fairly quick, but requires loading of individual MP3s (more http requests).
 	if (MIDI.loader) MIDI.loader.message("Flash API...");
-	DOMLoader.script.add({
-		src: conf.soundManagerUrl || "./inc/SoundManager2/script/soundmanager2.js",
-		verify: "SoundManager",
-		callback: function () {
-			MIDI.Flash.connect(instruments, conf);
-		}
-	});
+
+                    $.getScript(conf.soundManagerUrl || "./inc/SoundManager2/script/soundmanager2.js",
+                        function( data, textStatus, jqxhr ) {
+                          
+			            MIDI.Flash.connect(instruments, conf);
+                          });
+                          
 };
 
 connect.audiotag = function(filetype, instruments, conf) {
@@ -90,26 +89,16 @@ connect.audiotag = function(filetype, instruments, conf) {
 	var queue = createQueue({
 		items: instruments,
 		getNext: function(instrumentId) {
-			if (USE_XHR) {
-				DOMLoader.sendRequest({
-					url: MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js",
-					onprogress: getPercent,
-					onload: function (response) {
-						MIDI.Soundfont[instrumentId] = JSON.parse(response.responseText);
-						if (MIDI.loader) MIDI.loader.update(null, "Downloading", 100);
-						queue.getNext();
-					}
-				});
-			} else {
-				DOMLoader.script.add({
-					src: MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js",
-					verify: "MIDI.Soundfont." + instrumentId,
-					callback: function() {
-						if (MIDI.loader) MIDI.loader.update(null, "Downloading...", 100);
-						queue.getNext();
-					}
-				});
-			}
+                if(MIDI.Soundfont[instrumentId]) queue.getNext();
+                else{
+                    $.getScript(MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js", 
+                        function( data, textStatus, jqxhr ) {
+                          
+						  if (MIDI.loader) MIDI.loader.update(null, "Downloading...", 100);
+                          queue.getNext();
+                          });
+                          
+                }
 		},
 		onComplete: function() {
 			MIDI.AudioTag.connect(conf);
@@ -123,25 +112,6 @@ connect.webaudio = function(filetype, instruments, conf) {
 	var queue = createQueue({
 		items: instruments,
 		getNext: function(instrumentId) {
-			if (USE_XHR) {
-				DOMLoader.sendRequest({
-					url: MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js",
-					onprogress: getPercent,
-					onload: function(response) {
-						MIDI.Soundfont[instrumentId] = JSON.parse(response.responseText);
-						if (MIDI.loader) MIDI.loader.update(null, "Downloading...", 100);
-						queue.getNext();
-					}
-				});
-			} else {
-				//DOMLoader.script.add({
-				//	src: MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js",
-				//	verify: "MIDI.Soundfont." + instrumentId,
-				//	callback: function() {
-				//		if (MIDI.loader) MIDI.loader.update(null, "Downloading...", 100);
-				//		queue.getNext();
-				//	}
-				//});
                 if(MIDI.Soundfont[instrumentId]) queue.getNext();
                 else{
                     $.getScript(MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js", 
@@ -152,7 +122,7 @@ connect.webaudio = function(filetype, instruments, conf) {
                           });
                           
                 }
-			}
+		//	}
 		},
 		onComplete: function() {
 			MIDI.WebAudio.connect(conf);

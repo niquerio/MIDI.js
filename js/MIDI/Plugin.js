@@ -26,8 +26,6 @@ if (typeof (MIDI) === "undefined") var MIDI = {};
 
 var setPlugin = function(root) {
 	MIDI.api = root.api;
-	MIDI.setVolume = root.setVolume;
-	MIDI.programChange = root.programChange;
 	MIDI.noteOn = root.noteOn;
 	MIDI.noteOff = root.noteOff;
 	MIDI.chordOn = root.chordOn;
@@ -52,13 +50,13 @@ var setPlugin = function(root) {
 	var root = MIDI.WebMIDI = {
 		api: "webmidi"
 	};
-	root.setVolume = function (channel, volume) { // set channel volume
-		output.send([0xB0 + channel, 0x07, volume]);
-	};
+	//root.setVolume = function (channel, volume) { // set channel volume
+	//	output.send([0xB0 + channel, 0x07, volume]);
+	//};
 
-	root.programChange = function (channel, program) { // change channel instrument
-		output.send([0xC0 + channel, program]);
-	};
+	//root.programChange = function (channel, program) { // change channel instrument
+	//	output.send([0xC0 + channel, program]);
+	//};
 
 	root.noteOn = function (channel, note, velocity, delay) {
 		output.send([0x90 + channel, note, velocity], delay * 1000);
@@ -163,13 +161,6 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 		});
 	};
 
-	root.setVolume = function (channel, volume) {
-		MIDI.channels[channel].volume = volume;
-	};
-
-	root.programChange = function (channel, program) {
-		MIDI.channels[channel].instrument = program;
-	};
 
 	root.noteOn = function (channel, note, velocity, delay, instrument, channel_volume) {
         
@@ -238,12 +229,26 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 			for (var key in pending) break;
 			if (!key) conf.callback();
 		};
-		for (var instrument in MIDI.Soundfont) {
+		//for (var instrument in MIDI.Soundfont) {
+		//	pending[instrument] = true;
+		//	for (var i = 0; i < urlList.length; i++) {
+		//		audioLoader(instrument, urlList, i, bufferList, oncomplete);
+		//	}
+		//for (var instrument in MIDI.Soundfont) {
+        if(typeof(conf.instruments)=== "string"){
+			pending[conf.instruments] = true;
+			for (var i = 0; i < urlList.length; i++) {
+				audioLoader(conf.instruments, urlList, i, bufferList, oncomplete);
+            }
+        }else{
+		for (var n = 0; n < conf.instruments.length; n++) {
+            var instrument = conf.instruments[n];
 			pending[instrument] = true;
 			for (var i = 0; i < urlList.length; i++) {
 				audioLoader(instrument, urlList, i, bufferList, oncomplete);
 			}
 		}
+        }
 	};
 })();
 
@@ -270,9 +275,7 @@ if (window.Audio) (function () {
 		channels[nid] = new Audio();
 	}
 
-	var playChannel = function (channel, note) {
-		if (!MIDI.channels[channel]) return;
-		var instrument = MIDI.channels[channel].instrument;
+	var playChannel = function (channel, note, instrument, channel_volume) {
 		var instrumentId = MIDI.GeneralMIDI.byId[instrument].id;
 		var note = notes[note];
 		if (!note) return;
@@ -281,14 +284,12 @@ if (window.Audio) (function () {
 		var audio = channels[nid];
 		channelInstrumentNoteIds[ nid ] = instrumentNoteId;
 		audio.src = MIDI.Soundfont[instrumentId][note.id];
-		audio.volume = volume / 127;
+		audio.volume = channel_volume / 127;
 		audio.play();
 		channel_nid = nid;
 	};
 
-	var stopChannel = function (channel, note) {
-		if (!MIDI.channels[channel]) return;
-		var instrument = MIDI.channels[channel].instrument;
+	var stopChannel = function (channel, note, instrument) {
 		var instrumentId = MIDI.GeneralMIDI.byId[instrument].id;
 		var note = notes[note];
 		if (!note) return;
@@ -306,35 +307,28 @@ if (window.Audio) (function () {
 		}
 	};
 
-	root.programChange = function (channel, program) {
-		MIDI.channels[channel].instrument = program;
-	};
 
-	root.setVolume = function (channel, n) {
-		volume = n; //- should be channel specific volume
-	};
-
-	root.noteOn = function (channel, note, velocity, delay) {
+	root.noteOn = function (channel, note, velocity, delay, instrument, channel_volume) {
 		var id = note2id[note];
 		if (!notes[id]) return;
 		if (delay) {
 			return window.setTimeout(function () {
-				playChannel(channel, id);
+				playChannel(channel, id, instrument, channel_volume);
 			}, delay * 1000);
 		} else {
-			playChannel(channel, id);
+			playChannel(channel, id, instrument, channel_volume);
 		}
 	};
 	
-	root.noteOff = function (channel, note, delay) {
+	root.noteOff = function (channel, note, delay, instrument) {
 		var id = note2id[note];
 		if (!notes[id]) return;
 		if (delay) {
 			return setTimeout(function() {
-				stopChannel(channel, id);
+				stopChannel(channel, id, instrument);
 			}, delay * 1000)
 		} else {
-			stopChannel(channel, id);
+			stopChannel(channel, id, instrument);
 		}
 	};
 	
@@ -403,17 +397,9 @@ if (window.Audio) (function () {
 	var noteReverse = {};
 	var notes = {};
 
-	root.programChange = function (channel, program) {
-		MIDI.channels[channel].instrument = program;
-	};
 
-	root.setVolume = function (channel, note) {
-
-	};
-
-	root.noteOn = function (channel, note, velocity, delay) {
-		if (!MIDI.channels[channel]) return;
-		var instrument = MIDI.channels[channel].instrument;
+	root.noteOn = function (channel, note, velocity, delay, instrument, channel_volume) {
+		var instrument = instrument;
 		var id = MIDI.GeneralMIDI.byId[instrument].number;
 		note = id + "" + noteReverse[note];
 		if (!notes[note]) return;
@@ -426,13 +412,11 @@ if (window.Audio) (function () {
 		}
 	};
 
-	root.noteOff = function (channel, note, delay) {
+	root.noteOff = function (channel, note, delay, instrument) {
 
 	};
 
-	root.chordOn = function (channel, chord, velocity, delay) {
-		if (!MIDI.channels[channel]) return;
-		var instrument = MIDI.channels[channel].instrument;
+	root.chordOn = function (channel, chord, velocity, delay, instrument) {
 		var id = MIDI.GeneralMIDI.byId[instrument].number;
 		for (var key in chord) {
 			var n = chord[key];
@@ -464,7 +448,7 @@ if (window.Audio) (function () {
 				var synth = MIDI.GeneralMIDI.byName[instrument];
 				var instrumentId = synth.number;
 				notes[instrumentId+""+id] = soundManager.createSound({
-					id: id,
+					id: instrumentId + "" + id,
 					url: MIDI.soundfontUrl + instrument + "-mp3/" + id + ".mp3",
 					multiShot: true,
 					autoLoad: true,

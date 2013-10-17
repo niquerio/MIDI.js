@@ -327,7 +327,7 @@ function MidiPlayer(){
                     eventQueue.push({
                         event: event,
                         //turns off note
-                        source: MIDI.noteOff(channel, note, currentTime / 1000 + ctx.currentTime),
+                        source: MIDI.noteOff(channel, note, currentTime / 1000 + ctx.currentTime, self.channels[channel].instrument),
                         //schedules when to turn off note
                         interval: scheduleTracking(false, channel, note, queuedTime, offset, 128)
                     });
