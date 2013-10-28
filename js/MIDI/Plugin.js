@@ -178,7 +178,7 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 		gainNode.connect(ctx.destination);
 		gainNode.gain.value = Math.max(-1, value);
 		source.connect(gainNode);
-		source.noteOn(delay || 0);
+		//source.noteOn(delay || 0);
 		source.start(delay || 0);
 		return source;
 	};

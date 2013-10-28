@@ -134,22 +134,18 @@ connect.webaudio = function(filetype, instruments, conf) {
 					}
 				});
 			} else {
-				//DOMLoader.script.add({
-				//	src: MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js",
-				//	verify: "MIDI.Soundfont." + instrumentId,
-				//	callback: function() {
-				//		if (MIDI.loader) MIDI.loader.update(null, "Downloading...", 100);
-				//		queue.getNext();
-				//	}
-				//});
                 if(MIDI.Soundfont[instrumentId]) queue.getNext();
                 else{
-                    $.getScript(MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js", 
-                        function( data, textStatus, jqxhr ) {
+                    $.ajax({ url: MIDI.soundfontUrl + instrumentId + "-" + filetype + ".js", 
+                        datatype: "script",
+                        success: function() {
                           
 						  if (MIDI.loader) MIDI.loader.update(null, "Downloading...", 100);
                           queue.getNext();
-                          });
+                          },
+
+async: false, 
+});
                           
                 }
 			}

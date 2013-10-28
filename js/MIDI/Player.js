@@ -86,7 +86,9 @@ function MidiPlayer(){
 
     //Important but I don't really understand this. Or know if it's necessary.
     function getContext(){
-        if (MIDI.lang === 'WebAudioAPI') {
+        //if (MIDI.lang === 'WebAudioAPI') {
+        //    return midiPlayer.ctx;
+        if (MIDI.api === 'webaudio') {
             return midiPlayer.ctx;
         } else if (!self.ctx) {
             self.ctx = { currentTime: 0 };
@@ -219,7 +221,8 @@ function MidiPlayer(){
             measure = miliSecondsPerBeat * beatsPerMeasure;
         }
 
-        var queuedTimeOffset = 0.5; //seems to be starting a little in the future. Don't really know why this is here
+        //var queuedTimeOffset = 0.5; //seems to be starting a little in the future. Don't really know why this is here
+        var queuedTimeOffset = 0.0; //seems to be starting a little in the future. Don't really know why this is here
         var note;
         var offset = 0; // to handle starting later in file.
         var messages = 0; //Chunks to look at;
@@ -235,7 +238,7 @@ function MidiPlayer(){
         //loops through data. 
         //only goes up to messages. 
         //Things get messed up if messages is much greater than 100;
-        for (var n = 0; n < length && messages < 100; n++) {
+        for (var n = 0; n < length && messages < 150; n++) {
             queuedTime += data[n][1];
 
             if (queuedTime < currentTime) {

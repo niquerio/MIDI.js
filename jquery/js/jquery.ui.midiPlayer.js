@@ -9,12 +9,15 @@
     $.widget("ui.midiPlayer", {
 		options: {
 			midi_file: null,
-			default_instrument: "recorder",
+			default_instrument: "acoustic_grand_piano",
 			channels: [],
+            show_channels: false,
+            instrument_options: "default", //behavior for display of instrument in channel table
 			//synth: null,
 		},
         _private_vars: {
             player: null,
+            active_channels: null,
         },
 				
 		_create: function() {
@@ -34,16 +37,16 @@
                     var player = secret.player;
                     player.initChannels();
                     player.loadFile(o.midi_file,1,function(){
-                    
+                    var playerDiv = $("<div>").css("height","35px").appendTo(el); 
                     var buttonsContainer = $("<div>").addClass("ui-midiPlayer-buttons-container");	
                     var play = $("<button>").addClass("ui-midiPlayer-play").text("play").appendTo(buttonsContainer);
                     var stop = $("<button>").addClass("ui-midiPlayer-stop").text("stop").appendTo(buttonsContainer);
                     
-                    buttonsContainer.appendTo(el);
+                    buttonsContainer.appendTo(playerDiv);
                     
-                    var currentTime = $("<span>").addClass("ui-midiPlayer-currentTime").text("0:00").appendTo(el);
-                    var capsule = $("<div>").addClass("ui-midiPlayer-capsule").appendTo(el);
-                    var duration = $("<span>").addClass("ui-midiPlayer-duration").text("-0:00").appendTo(el);
+                    var currentTime = $("<span>").addClass("ui-midiPlayer-currentTime").text("0:00").appendTo(playerDiv);
+                    var capsule = $("<div>").addClass("ui-midiPlayer-capsule").appendTo(playerDiv);
+                    var duration = $("<span>").addClass("ui-midiPlayer-duration").text("-0:00").appendTo(playerDiv);
                     
                     var masterVol = $("<div>").addClass("ui-midiPlayer-masterVolumeContainer");	
                     var vol = $("<div>").addClass("ui-midiPlayer-volume");
@@ -51,13 +54,15 @@
                     $("<span>").addClass("ui-icon").addClass("ui-icon-volume-on").appendTo(a);
                     a.appendTo(vol);
                     vol.appendTo(masterVol);
-                    masterVol.appendTo(el);
+                    masterVol.appendTo(playerDiv);
                     
                     self._makeMasterVolumeSlider(vol);
                     self._makePlayStopButtons(play,stop);
                     self._makeCapsule(capsule,currentTime,duration,play);
 
-                    var active_channels = player.get_active_channels();
+                    secret.active_channels = player.get_active_channels();
+		    var active_channels = secret.active_channels;
+		
                     var instruments = [];
                     for(var i = 0; i < active_channels.length; i++){
                             var program_num = active_channels[i];
@@ -86,14 +91,15 @@
                             }
                         }
                     }
-
-                    if(instruments.length > 0) MIDI.loadPlugin({ instruments: instruments, callback: function(){ MIDI.loader.stop(); } });
+                    if(o.show_channels === true) self._makeChannelsTable(el);
 
                     window.setInterval( function(){
                             $(capsule).trigger("timeUpdate");
                             },204); 
-                    
                     MIDI.loader.stop();
+                    if(instruments.length > 0) MIDI.loadPlugin({ instruments: instruments, callback: function(){ self._updateInstrumentOptions(); MIDI.loader.stop(); } });
+
+                    
                 });
                  }
 		    });
@@ -134,32 +140,197 @@ _makeCapsule: function(capsule_selector,currentTime_selector,duration_selector,p
 	    	});
 
         },    
+_makeChannelsTable: function(el){
+                        var self = this;
+                        var player = self._private_vars.player;
+			var active_channels = self._private_vars.active_channels;
+            var table = $("<table>")
+                .addClass("ui-midiPlayer-channelTable");
+
+            var thead = $("<thead>")
+                .addClass("ui-midiPlayer-channelTitle")
+                .appendTo(table);
+            
+            var titleTr = $("<tr>")
+                .appendTo(thead);
+
+            $("<th>").addClass("ui-midiPlayer-channelNum").text("#").appendTo(titleTr);
+            $("<th>").addClass("ui-midiPlayer-soloMute").text("S").appendTo(titleTr);
+            $("<th>").addClass("ui-midiPlayer-soloMute").text("M").appendTo(titleTr);
+            $("<th>").addClass("ui-midiPlayer-program").text("Instrument").appendTo(titleTr);
+            $("<th>").addClass("ui-midiPlayer-channelVol").text("Channel Volume").appendTo(titleTr);
+
+            $(table).appendTo(el);
+
+            var tbody = $("<tbody>").appendTo(table);
+            for(i = 0; i<16; i++){
+                var tr = $("<tr>").addClass("ui-midiPlayer-channel")
+                    .addClass("ui-midiPlayer-channel-" + (i+1))
+                    .addClass("ui-midiPlayer-inactive").appendTo(tbody);    
+                $("<td>").text(i+1).addClass("ui-midiPlayer-channelNum").appendTo(tr);
+
+                var soloTd = $("<td>").appendTo(tr);
+                var solo = $("<input>").text("SOLO")
+                    .addClass("ui-midiPlayer-solo")
+                    .attr("type","checkbox")
+                    .change( function () {
+                            //var id = $(this).parents().eq(1).attr("class").replace(/\D/g,'');
+                            var parentTr = $(this).parents().eq(1);
+                            var id = parentTr.find(".ui-midiPlayer-channelNum").text() - 1;
+                            var muteSelector = parentTr.find(".ui-midiPlayer-mute");
+
+                            if( $(this).is(':checked')){ if( $(muteSelector).is(':checked')){
+                            $(muteSelector).prop("checked", false);
+                            //$(muteSelector).button("refresh");
+                            player.channels[id].mute = false;
+                            } 
+                            player.channels[id].solo = true;
+
+                            if(player.playing){
+                            player.pause(true);
+                            player.resume();
+                            }
+                            }
+                            else{
+                                player.channels[id].solo = false;
+                                if(player.playing){
+                                    player.pause(true);
+                                    player.resume();
+                                }
+                            }
+
+                    })
+                    .appendTo(soloTd);
+                
+                var soloLabel = $('<label>')
+                    //.attr("for",soloId)
+                    .addClass("ui-midiPlayer-solo")
+                    .text("SOLO")
+                    .appendTo(soloTd);
+
+                var muteTd  = $("<td>").appendTo(tr);
+                var mute = $("<input>").text("MUTE")
+                    .addClass("ui-midiPlayer-mute")
+                    .attr("type","checkbox")
+                    //.button({ text: false, icons: {primary: "icon-play"},})
+                    .change( function () {
+                            //var id = $(this).parents().eq(1).attr("class").replace(/\D/g,'');
+                            var parentTr = $(this).parents().eq(1);
+                            var id = parentTr.find(".ui-midiPlayer-channelNum").text() - 1;
+                            var soloSelector = parentTr.find(".ui-midiPlayer-solo");
+
+                            if( $(this).is(':checked')){
+                            if( $(soloSelector).is(':checked')){
+                            $(soloSelector).prop("checked", false);
+                            //$(soloSelector).button("refresh");
+                            player.channels[id].solo = false;
+                            } 
+                            player.channels[id].mute = true;
+
+                            if(player.playing){
+                            player.pause(true);
+                            player.resume();
+                            }
+                            }
+                            else{
+                                player.channels[id].mute = false;
+                                if(player.playing){
+                                    player.pause(true);
+                                    player.resume();
+                                }
+                            }
+
+                    })
+                .appendTo(muteTd);
+
+                var muteLabel = $('<label>')
+                    //.attr("for",muteId)
+                    .addClass("ui-midiPlayer-soloMute")
+                    .text("MUTE")
+                    .appendTo(muteTd);
+
+            var programTd =     $("<td>").appendTo(tr);
+            
+            var program = $("<select>")
+                .addClass("ui-midiPlayer-program")
+            .change(function(){
+                           var parentTr = $(this).parents().eq(1);
+                            var channel = parentTr.find(".ui-midiPlayer-channelNum").text() - 1;
+                var program = $(this).val();
+                player.channels[channel]['instrument'] = program;
+                if(player.playing){
+                    player.pause(true);
+                    player.resume();
+                }
+            })
+
+                .appendTo(programTd);
+
+	    self._updateInstrumentOptions();
+        //    for(var n = 0; n < active_channels.length; n++){
+        //      // var opt = $("<option>").val(active_channels[n])
+        //      //     .text(MIDI.GeneralMIDI.byId[active_channels[n]].instrument)
+        //      //     .appendTo(program);
+
+        //       if(n === i) opt.attr('selected',true);
+        //    }
+
+                var volumeTd = $("<td>").appendTo(tr);
+                    
+                    var volume = $('<div>')
+                    .addClass("ui-midiPlayer-channelVol")
+                    .slider({
+                        "range": "min", 
+                        "min": 0,
+                        "max": 127,
+                        "value": 127,
+                        "change": (function(event,ui){
+                           var parentTr = $(this).parents().eq(1);
+                            var channel = parentTr.find(".ui-midiPlayer-channelNum").text() - 1;
+                            var volume = ui.value;
+                            player.channels[channel]['volume'] = volume; 
+                            if(player.playing){
+                                player.pause(true);
+                                player.resume();
+                            }
+                        }),
+                    })
+                    .appendTo(volumeTd);
+
+                   if(typeof(active_channels[i]) !== "number"){
+                       mute.prop("disabled",true);
+                       solo.prop("disabled",true);
+                       program.prop("disabled",true);
+                       volume.slider("disable")
+                   } 
+            }
+        },
 		_setOption: function(option, value) {
-			//$.Widget.prototype._setOption.apply( this, arguments );
-			//
-			//var el = this.element,
-			//	cap = el.next(),
-			//	capHeight = cap.outerHeight() - parseInt(cap.css("paddingTop")) + parseInt(cap.css("paddingBottom"));
-			//
-			//switch (option) {
-			//	case "location":
-			//		(value === "top") ? cap.css("top", el.offset().top) : cap.css("top", el.offset().top + el.height() - capHeight);
-			//		break;
-			//	case "color":
-			//		el.next().css("color", value);
-			//		break;
-			//	case "backgroundColor":
-			//		el.next().css("backgroundColor", value);
-			//		break;
-			//}
 		},
-        _makePlayStopButtons: function(play_selector, stop_selector){
-                                     var player = this._private_vars.player;
-	    	$(play_selector).button({
-	    	    text: false,
-	    	    label: "play",
-	    	    icons: { primary: "ui-icon-play" },
-	    	}).click( function(){
+		_updateInstrumentOptions: function(){
+			     var self = this;
+			     var el = self.element;
+     				var active_channels = self._private_vars.player.get_active_channels();
+                             var programSelector = $(el).find(".ui-midiPlayer-program");
+			     
+                             programSelector.empty();
+                             for (var instrument in MIDI.Soundfont){
+                                 var inst_num = MIDI.GeneralMIDI.byName[instrument].number;
+                                 var opt = $("<option>").val(inst_num).text(MIDI.GeneralMIDI.byName[instrument].instrument).appendTo(programSelector);
+                             } 
+			     for(var n = 0; n < active_channels.length; n++){
+			        var channelSelector = ".ui-midiPlayer-channel-" + (n+1);
+			        $(el).find(channelSelector).find(".ui-midiPlayer-program").find("option[value='" + active_channels[n] + "']").attr('selected',true);	
+
+			     }
+                          },
+                _makePlayStopButtons: function(play_selector, stop_selector){
+                    var player = this._private_vars.player;
+	    	    $(play_selector).button({
+	    	        text: false,
+	    	        label: "play",
+	    	        icons: { primary: "ui-icon-play" },
+	    	    }).click( function(){
 	    	    var options;
 	    	    if ( $( this ).text() === "play" ) {
 	    	        options = {
