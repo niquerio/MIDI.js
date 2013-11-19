@@ -1,3 +1,41 @@
+/* Add microphone and mute button to jquery ui */
+
+.ui-state-default .icon-microphone  { 
+    background-image:  url(./smoothness/images/microphone-light.png) !important  }
+.ui-state-hover .icon-microphone, 
+.ui-state-focus .icon-microphone, 
+.ui-state-active .icon-microphone  { 
+    background-image:  url(./smoothness/images/microphone-medium.png) !important  
+}
+
+.ui-state-highlight .ui-microphone {
+    background-image:  url(./smoothness/images/microphone-blue.png) !important  
+}
+
+.ui-state-error .ui-microphone, 
+.ui-state-error-text .ui-microphone {
+    background-image:  url(./smoothness/images/microphone-red.png) !important  
+}
+
+.ui-state-default .icon-mute  { background-image:  url(./smoothness/images/mute-light.png) !important  
+}
+
+.ui-state-hover .icon-mute, 
+.ui-state-focus .icon-mute, 
+.ui-state-active .icon-mute  { 
+    background-image:  url(./smoothness/images/mute-medium.png) !important  
+}
+
+.ui-state-highlight .ui-mute {
+    background-image:  url(./smoothness/images/mute-blue.png) !important  
+}
+
+.ui-state-error .ui-mute, 
+.ui-state-error-text .ui-mute {
+    background-image:  url(./smoothness/images/mute-red.png) !important  
+}
+
+/*Main MidiPlayer Css*/
 .ui-midiPlayer { 
     position: relative; 
     width: 50%; 
@@ -63,4 +101,8 @@
 .ui-midiPlayer-volume { 
     height: 0;
     margin-top: 5px;
+}
+.ui-midiPlayer-soloMute {
+    height: 1.2em; width: 1.2em;  
+
 }
