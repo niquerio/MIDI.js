@@ -15,10 +15,10 @@
             instrument_options: "default", //behavior for display of instrument in channel table
             updateInstrumentOptions: null,
             //synth: null,
-        },
-        _private_vars: {
             player: null,
             active_channels: null,
+        },
+        _private_vars: {
         },
 
         _create: function() {
@@ -34,8 +34,8 @@
             MIDI.loadPlugin({ 
                 instruments: o.default_instrument,
                 callback: function(){
-                    secret.player = new MidiPlayer;
-                    var player = secret.player;
+                    o.player = new MidiPlayer;
+                    var player = o.player;
                     player.initChannels();
                     player.loadFile(o.midi_file,1,function(){
                         var playerDiv = $("<div>").css("height","35px").appendTo(el); 
@@ -61,8 +61,8 @@
                         self._makePlayStopButtons(play,stop);
                         self._makeCapsule(capsule,currentTime,duration,play);
 
-                        secret.active_channels = player.get_active_channels();
-                        var active_channels = secret.active_channels;
+                        o.active_channels = player.get_active_channels();
+                        var active_channels = o.active_channels;
 
                         var instruments = [];
                         for(var i = 0; i < active_channels.length; i++){
@@ -111,7 +111,7 @@
 
         },
         _makeCapsule: function(capsule_selector,currentTime_selector,duration_selector,play_selector){
-            var player = this._private_vars.player;
+            var player = this.options.player;
             var self = this;
             $(capsule_selector)
             .slider({
@@ -137,8 +137,8 @@
     },    
     _makeChannelsTable: function(el){
         var self = this;
-        var player = self._private_vars.player;
-        var active_channels = self._private_vars.active_channels;
+        var player = self.options.player;
+        var active_channels = self.options.active_channels;
         var table = $("<table>")
         .addClass("ui-midiPlayer-channelTable");
 
@@ -155,7 +155,30 @@
         $("<th>").addClass("ui-midiPlayer-program").text("Instrument").appendTo(titleTr);
         $("<th>").addClass("ui-midiPlayer-channelVol").text("Channel Volume").appendTo(titleTr);
 
+        var hide = $("<input>").attr("type","checkbox").uniqueId().change( function () {
+
+                    if( $(this).is(':checked')){ 
+                      $(table).hide("blind");
+                      $("#"+hideId).button({label: "Show Channel Info",text:false,});
+                    }
+                else{
+                    $(table).show("blind");
+                    $("#" + hideId).button({label:"Hide Channel Info",text:false,});
+                    }
+                
+
+            }).appendTo(el);
+        var hideId = $(hide).attr("id");
+        var hideLabel = $("<label>").attr("for",hideId).text("Hide Channel Info").appendTo(el);
+
         $(table).appendTo(el);
+
+        $("#"+hideId).button({
+            text:false,
+            icons: { primary: "ui-icon-carat-1-s" }
+
+        });
+
 
         var tbody = $("<tbody>").appendTo(table);
         for(i = 0; i<16; i++){
@@ -306,8 +329,13 @@
         $("#"+soloId).button("disable");
         solo.prop("disabled",true);
         program.prop("disabled",true);
-        volume.slider("disable")
+        volume.slider("disable");
+        tr.addClass("ui-midiPlayer-inactive");
+        
     } 
+    else{
+        tr.removeClass("ui-midiPlayer-inactive");
+    }
 }
     },
     _setOption: function(option, value) {
@@ -315,11 +343,14 @@
     updateInstrumentOptions: function(){
         var self = this;
         var el = self.element;
-        var active_channels = self._private_vars.player.get_active_channels();
+        var active_channels = self.options.player.get_active_channels();
         var programSelector = $(el).find("tbody").find(".ui-midiPlayer-program");
 
         programSelector.empty();
-        for (var instrument in MIDI.Soundfont){
+        var instruments = Object.keys(MIDI.Soundfont);
+        instruments.sort();
+        for( var i = 0; i < instruments.length; i++){
+            var instrument = instruments[i];
             var inst_num = MIDI.GeneralMIDI.byName[instrument].number;
             var opt = $("<option>").val(inst_num).text(MIDI.GeneralMIDI.byName[instrument].instrument).appendTo(programSelector);
         } 
@@ -330,7 +361,7 @@
         }
     },
     _makePlayStopButtons: function(play_selector, stop_selector){
-        var player = this._private_vars.player;
+        var player = this.options.player;
         $(play_selector).button({
             text: false,
             label: "play",
@@ -370,7 +401,7 @@ $( this ).button( "option", options );
 
     },
     _makeMasterVolumeSlider: function(vol_selector){
-        var player = this._private_vars.player;
+        var player = this.options.player;
         $(vol_selector)	
         // create the volume slider
         .slider({
