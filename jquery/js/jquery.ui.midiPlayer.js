@@ -12,6 +12,11 @@
             default_instrument: "acoustic_grand_piano",
             channels: [],
             show_channels: false,
+            tempo_control: false,
+            transpose_control: false,
+            measure_counter: false,
+            measure_range_control: false,
+            all_controls: false,
             instrument_options: "default", //behavior for display of instrument in channel table
             updateInstrumentOptions: null,
             //synth: null,
@@ -45,6 +50,10 @@
 
                         buttonsContainer.appendTo(playerDiv);
 
+                        var measure = $("<span>").addClass("ui-midiPlayer-measure").attr("title","Measure #").text("1");
+                        if(o.measure_counter === true || o.measure_range_control === true || o.all_controls === true){
+                        $(measure).appendTo(playerDiv);
+                        }
                         var currentTime = $("<span>").addClass("ui-midiPlayer-currentTime").text("0:00").appendTo(playerDiv);
                         var capsule = $("<div>").addClass("ui-midiPlayer-capsule").appendTo(playerDiv);
                         var duration = $("<span>").addClass("ui-midiPlayer-duration").text("-0:00").appendTo(playerDiv);
@@ -60,6 +69,17 @@
                         self._makeMasterVolumeSlider(vol);
                         self._makePlayStopButtons(play,stop);
                         self._makeCapsule(capsule,currentTime,duration,play);
+                        if(o.measure_counter === true || o.measure_range_control === true|| o.all_controls === true){
+                            capsule.css("margin-left","8.7em");
+                            currentTime.css("left","5.8em");
+                        }
+
+
+            player.addListener(function(data) {
+                if (data.metronome){
+                    $(measure).text(data.metronome);  
+                }
+            });
 
                         o.active_channels = player.get_active_channels();
                         var active_channels = o.active_channels;
@@ -92,17 +112,59 @@
                                 }
                             }
                         }
-                        if(o.show_channels === true) self._makeChannelsTable(el);
+                        if(o.show_channels === true || o.measure_range_control === true || o.tempo_control === true || o.transpose_control == true 
+                        || o.all_controls === true){ //or a lot of other things.
 
-                        window.setInterval( function(){ $(capsule).trigger("timeUpdate"); },204); 
+                        $(capsule).css("margin-right","6.2em");
+                        $(duration).css("right","3em");
+                        $(masterVol).css("right","1.6em");
+                        var div = $("<div>").uniqueId().appendTo(el);
+                        var showHide = $("<button>").text("Hide Controls").addClass("ui-midiPlayer-showControls")
+                        .button({
+                            text: false,
+                        icons: { primary: "ui-icon-triangle-1-n" },
 
-                        MIDI.loader.stop();
-                        if(instruments.length > 0) MIDI.loadPlugin({ instruments: instruments, callback: function(){ $(".ui-midiPlayer").midiPlayer("updateInstrumentOptions"); MIDI.loader.stop(); } });
+                    }).click( function () {
+                        var options;
+                        if ( $( this ).text() === "Hide Controls" ) {
+                            options = {
+                                label: "Show Controls",
+                                icons: {
+                                    primary: "ui-icon-triangle-1-s"
+                                }
+                            };
+                            $(div).hide("blind");
+                        } else {
+                            options = {
+                                label: "Hide Controls",
+                                icons: {
+                                    primary: "ui-icon-triangle-1-n"
+                                }
+                            };
+                            $(div).show("blind");
+                        }
+                        $( this ).button( "option", options );
 
 
-                    });
+
+                    }).appendTo(playerDiv);
+
+                    var measure_range_slider = null;
+                    if(o.measure_range_control === true || o.all_controls === true) measure_range_slider =  self._makeMeasureRange(div, play);
+                    if(o.tempo_control === true ||  o.all_controls === true) self._makeTempo(div, play, measure_range_slider);
+                    if(o.transpose_control === true ||  o.all_controls === true) self._makeTranspose(div);
+                    if(o.show_channels === true ||  o.all_controls === true) self._makeChannelsTable(div);
                 }
-            });
+
+            window.setInterval( function(){ $(capsule).trigger("timeUpdate"); },204); 
+
+            MIDI.loader.stop();
+            if(instruments.length > 0) MIDI.loadPlugin({ instruments: instruments, callback: function(){ $(".ui-midiPlayer").midiPlayer("updateInstrumentOptions"); MIDI.loader.stop(); } });
+
+
+        });
+    }
+});
 
         },
 
@@ -135,7 +197,7 @@
         });
 
     },    
-    _makeChannelsTable: function(el){
+    _makeChannelsTable: function(div){
         var self = this;
         var player = self.options.player;
         var active_channels = self.options.active_channels;
@@ -155,29 +217,7 @@
         $("<th>").addClass("ui-midiPlayer-program").text("Instrument").appendTo(titleTr);
         $("<th>").addClass("ui-midiPlayer-channelVol").text("Channel Volume").appendTo(titleTr);
 
-        var hide = $("<input>").attr("type","checkbox").uniqueId().change( function () {
-
-                    if( $(this).is(':checked')){ 
-                      $(table).hide("blind");
-                      $("#"+hideId).button({label: "Show Channel Info",text:false,});
-                    }
-                else{
-                    $(table).show("blind");
-                    $("#" + hideId).button({label:"Hide Channel Info",text:false,});
-                    }
-                
-
-            }).appendTo(el);
-        var hideId = $(hide).attr("id");
-        var hideLabel = $("<label>").attr("for",hideId).text("Hide Channel Info").appendTo(el);
-
-        $(table).appendTo(el);
-
-        $("#"+hideId).button({
-            text:false,
-            icons: { primary: "ui-icon-carat-1-s" }
-
-        });
+        $(table).appendTo(div);
 
 
         var tbody = $("<tbody>").appendTo(table);
@@ -453,6 +493,95 @@ $( this ).button( "option", options );
                 'height': ''
                 }).find('.ui-slider-range').hide();
             }).find('.ui-slider-range').addClass('ui-corner-bottom').hide().end();
+
+
+        },
+        _makeMeasureRange: function(div,play){
+            var player = this.options.player;
+            var total_measures = player.measures.length - 1; 
+            var measure_range = $("<div>").text("Measure to Play: 0 - " + total_measures).appendTo(div);
+            var slider = $("<div>").addClass("ui-midiPlayer-measureRange").slider({
+                "max": total_measures, 
+                "disabled": false,
+                "values": [1,total_measures],
+                "min": 1,
+                "range" : true,
+                "slide": function(event,ui){
+                    if(ui.values[1] - ui.values[0] > 0){
+                        $(measure_range).text("Measures to Play: " 
+                    + ui.values[0] + " - " + ui.values[1]);
+                    return true;
+                }else{	
+                    return false; 
+                }
+
+            },
+            "change": function(event,ui){
+                player.firstMeasureToBePlayed = ui.values[0];
+                player.lastMeasureToBePlayed = ui.values[1];
+                if(player.playing){
+                    player.stop();
+                    player.resume();
+                }else{ 
+                    player.stop(); 
+                    var options = {
+                        label: "play",
+                        icons: { primary: "ui-icon-play" },
+                    }
+                    $(play).button("option",options);
+                
+                }
+
+
+            },
+
+    }).appendTo(div);
+           
+                return slider;
+            
+        },
+        _makeTempo: function(div, play, measure_range_slider){
+    var tempo = $("<div>").text("Tempo (%): ");
+    var player = this.options.player;
+    var midi_file = this.options.midi_file;
+    $("<input>")
+        .attr("type","number")
+        .attr("min","0")
+        .val(100)
+        .change(function(){
+            player.stop();
+            var tmp = $(this).val() / 100;
+            player.timeWarp = 1 / tmp; 
+            player.loadFile(midi_file,0);
+            if(measure_range_slider !== null){
+                player.firstMeasureToBePlayed = $(measure_range_slider).slider("values",0);
+                player.lastMeasureToBePlayed = $(measure_range_slider).slider("values",1);
+                player.stop();
+
+            }
+            var options = {
+                label: "play",
+                icons: { primary: "ui-icon-play" },
+            }
+            $(play).button("option",options);
+        }).appendTo(tempo);
+        $(tempo).appendTo(div);
+        },
+        _makeTranspose: function(div){
+    var transpose = $("<div>").text("Transpose (+/- semitone): ");
+    var player = this.options.player;
+    $("<input>")
+        .attr("type","number")
+        .val(0)
+        .change(function(){
+            player.MIDIOffset = parseInt($(this).val());
+            if(player.playing){
+                player.pause(true);
+                player.resume();
+            }
+        }).appendTo(transpose);
+        $(transpose).appendTo(div);
+        
 
 
         },
