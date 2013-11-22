@@ -1,39 +1,31 @@
-Basic usage:
+##Basic usage:
 
-must include: 
-./js/MIDI/AudioDetect.js
-./js/MIDI/LoadPlugin.js
-./js/MIDI/Plugin.js" 
-./js/MIDI/Player.js" 
-./js/Widgets/Loader.js 
+###must include: 
+* ./js/MIDI/AudioDetect.js
+* ./js/MIDI/LoadPlugin.js
+* ./js/MIDI/Plugin.js" 
+* ./js/MIDI/Player.js" 
+* ./js/Widgets/Loader.js 
+* ./inc/jasmid/stream.js
+* ./inc/jasmid/midifile.js
+* ./inc/jasmid/replayer.js
+* ./inc/Base64.js
+* ./inc/base64binary.js
+* ./jquery/js/jquery-1.9.1.js
+* ./jquery/js/jquery-ui-1.10.3.custom.js
+* ./jquery/js/jquery.ui.midiPlayer.js
+* ./jquery/css/smoothness/jquery-ui-1.10.3.custom.css
+* ./jquery/css/ui.midiPlayer.css
 
-./inc/jasmid/stream.js
-./inc/jasmid/midifile.js
-./inc/jasmid/replayer.js
-./inc/Base64.js
-./inc/base64binary.js
 
-jquery/js/jquery-1.9.1.js
-jquery/js/jquery-ui-1.10.3.custom.js
-jquery/js/jquery.ui.midiPlayer.js
 
-./jquery/css/smoothness/jquery-ui-1.10.3.custom.css
-./jquery/css/ui.midiPlayer.css
-
-One day I will minify the code.
-
--------------
-
-MINIMAL USAGE
-
-<pre>
+```
 <script>
 $("#player").midiPlayer({midi_file: "./my_midi.midi"});
 </script>
 <body>
 <div id="player"></div>
-</pre>
-
+```
 
 Must be a midifile on the server. Can't handle links yet.
 
