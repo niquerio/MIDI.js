@@ -617,6 +617,7 @@ function playFile(f){
     if(!f){ f = $("#midiURL").val();}
     player.timeWarp = 1;
     player.initChannels();
+    currentSong = f;
     //MIDI.channels = MIDI.initChannels();
     player.loadFile(f,1,function(){
         showSongInfo();
@@ -749,9 +750,9 @@ function add_instruments(){
     </div>
     <div id="drop_zone_message" class="inactive" >
         Drag and Drop Midi Files Anywhere.</br> 
+        <a href="javascript:void(playFile('./boat_song.midi'))">Boat Song</a><br>
 	Or Click to Upload: <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" disabled/><br>
 	<form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL" disabled> <input type="submit" disabled></form>	
-        <a href="javascript:void(playFile('boat_song.midi'))">Boat Song</a><br>
         
 
     </div>
