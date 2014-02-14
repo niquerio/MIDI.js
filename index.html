@@ -679,7 +679,7 @@ function add_instruments(){
 
 <body id="drop_zone">
     <div class="main" id="colors"></div>
-<h1>TunaMidi <span><img src="images/tuna.jpg" height="40px"></span></h1>
+    <h1>TunaMidi <span><a href="http://mudcu.be/midi-js/"><img src="images/tuna.jpg" height="40px"></a></span></h1>
     <div id="block">
 
         <div id="player" class="mplayer ui-widget">
@@ -778,10 +778,21 @@ function add_instruments(){
         Drag and Drop Midi Files Anywhere.</br> 
         <a href="javascript:void(playFile('./boat_song.midi'))">Boat Song</a><br>
 	Or Click to Upload: <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" disabled/><br>
-	<form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL" disabled> <input type="submit" disabled></form>	
+    <form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL" disabled> <input type="submit" disabled></form>	<br>
+    <a href="https://github.com/niquerio/MIDI.js/issues">Submit a Bug or Feature Request</a><br>
+    <a href="https://github.com/niquerio">Contact Monique</a> <br>
         
 
     </div>
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
+        ga('create', 'UA-3878138-5', 'moniquerio.com');
+        ga('send', 'pageview');
+
+    </script>
 </body>
 </html>
