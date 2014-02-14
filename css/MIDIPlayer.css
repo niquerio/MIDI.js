@@ -253,7 +253,13 @@ width:95%;
 
 /*message at the bottom */
 #drop_zone_message{
+    display: inline-block;
     text-align: right;
     float: right;
     margin-right: 10px;
+}
+
+#add_stuff{
+    display: inline-block;
+    float: left;
 }

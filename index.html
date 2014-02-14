@@ -785,14 +785,19 @@ function add_instruments(){
 	</select>
 	<input type=submit>
     </form>
+        <a href="javascript:void(playFile('./boat_song.midi'))">Boat Song</a><br>
+        <a href="javascript:void(playFile('./sonatina_part1.midi'))">Sonatina Mov1 Allegro</a><br>
+        <a href="javascript:void(playFile('./sonatina_part2.midi'))">Sonatina Mov2 Minuet</a><br>
+        <a href="javascript:void(playFile('./sonatina_part3.midi'))">Sonatina Mov3 Allegro</a><br>
     </div>
     <div id="drop_zone_message" class="inactive" >
         Drag and Drop Midi Files Anywhere.</br> 
-        <a href="javascript:void(playFile('./boat_song.midi'))">Boat Song</a><br>
 	Or Click to Upload: <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" disabled/><br>
     <form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL" disabled> <input type="submit" disabled></form>	<br>
+    <br>
     <a href="https://github.com/niquerio/MIDI.js/issues">Submit a Bug or Feature Request</a><br>
-    <a href="https://github.com/niquerio">Contact Monique</a> <br>
+    <a href="https://github.com/niquerio">Contact Monique</a> <br><br>
+    TunaMidi Uses <a href="https://github.com/gasman/jasmid">JasMid</a> and <a href="https://github.com/mudcube/MIDI.js/">MidiJS</a><br>
         
 
     </div>
