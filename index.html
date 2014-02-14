@@ -44,6 +44,22 @@
 var player = {}; 
 var currentSong = ''; 
 
+function playFile(f){
+  //  if(!f){ f = $("#midiURL").val();}
+    player.timeWarp = 1;
+    player.initChannels();
+    currentSong = f;
+    //MIDI.channels = MIDI.initChannels();
+    player.loadFile(currentSong,1,function(){
+        showSongInfo();
+        $("#play").button("enable");
+        $("#stop").button("enable");
+        $("#capsule").slider("enable");
+        $(".mplayer .volume").slider("enable");
+        $("#start_stop").slider("values",1,player.lastMeasureToBePlayed);
+	$(".channelVol.ui-slider").slider("value",127);
+    });
+}
 /*Reads files that are droped or loaded the olde fashioned way */
 function readFile(f){
     var reader = new FileReader();
@@ -554,8 +570,34 @@ function load(){
     dropZone.addEventListener('drop', handleFileSelect, false);
 
 	$("#midiURLForm").submit(function() {
-		playFile();
-   	 	return false;
+		url = $("#midiURL").val();
+		$.ajax({
+                  type: "POST",
+                  url: "php/get_remote_midi.php", 
+                  data: {url: url}, 
+                  async: false,
+                  }).success( function(data){
+    		      player.timeWarp = 1;
+    		      player.initChannels();
+		      //curentSong = window.btoa(data);
+    		      currentSong = data;
+    		      //MIDI.channels = MIDI.initChannels();
+    		      player.loadFile(currentSong,1,function(){
+    		          showSongInfo();
+    		          $("#play").button("enable");
+    		          $("#stop").button("enable");
+    		          $("#capsule").slider("enable");
+    		          $(".mplayer .volume").slider("enable");
+    		          $("#start_stop").slider("values",1,player.lastMeasureToBePlayed);
+    		          $(".channelVol.ui-slider").slider("value",127);
+    		      });
+		      }).error(function(xhr, status, error) {
+			      alert(xhr.responseText);
+				return false;
+
+		      });
+				return false;
+
 	});
 
 	$("#add_instruments").submit(function(){
@@ -613,22 +655,6 @@ window.setInterval( function(){
 //run load function on load.
 $(window).load(load);
 
-function playFile(f){
-    if(!f){ f = $("#midiURL").val();}
-    player.timeWarp = 1;
-    player.initChannels();
-    currentSong = f;
-    //MIDI.channels = MIDI.initChannels();
-    player.loadFile(f,1,function(){
-        showSongInfo();
-        $("#play").button("enable");
-        $("#stop").button("enable");
-        $("#capsule").slider("enable");
-        $(".mplayer .volume").slider("enable");
-        $("#start_stop").slider("values",1,player.lastMeasureToBePlayed);
-	$(".channelVol.ui-slider").slider("value",127);
-    });
-}
 
 function add_instruments(){
     var instrument = $("#add_instruments_select").val();
