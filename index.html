@@ -647,6 +647,7 @@ function load(){
 		$("#loadFile").prop("disabled",false);
 		$("#midiURLForm").children().prop("disabled",false);
 		$("#drop_zone_message").removeClass("inactive");
+		$("#add_stuff").removeClass("inactive");
             //stop cute loading widget
             MIDI.loader.stop();
         }
@@ -793,11 +794,12 @@ function add_instruments(){
     <div id="drop_zone_message" class="inactive" >
         Drag and Drop Midi Files Anywhere.</br> 
 	Or Click to Upload: <input id="loadFile" type="file" name="file" onchange="readFile(this.files[0])" disabled/><br>
-    <form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL" disabled> <input type="submit" disabled></form>	<br>
-    <br>
+    <form id="midiURLForm" >Or Input a URL: <input type="url" id="midiURL" disabled> <input type="submit" disabled></form>
+</div>
+<div id="contact">
     <a href="https://github.com/niquerio/MIDI.js/issues">Submit a Bug or Feature Request</a><br>
     <a href="https://github.com/niquerio">Contact Monique</a> <br><br>
-    TunaMidi Uses <a href="https://github.com/gasman/jasmid">JasMid</a> and <a href="https://github.com/mudcube/MIDI.js/">MidiJS</a><br>
+    TunaMidi is based on <a href="https://github.com/gasman/jasmid">JasMid</a> by Matt Westcott and <a href="https://github.com/mudcube/MIDI.js/">MidiJS</a> by Michael Deal<br>
         
 
     </div>
