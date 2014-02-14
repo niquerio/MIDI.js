@@ -250,25 +250,24 @@ white-space:normal;
 width:95%;
 }
 
-
 /*message at the bottom */
-#drop_zone_message{
-    display: inline-block;
+
+#upload_contact_wrapper{
+    float:right;
     text-align: right;
-    float: right;
-    margin-right: 10px;
+    margin-right:10px;
+}
+
+#drop_zone_message{
+    display: block;
+}
+
+#contact{
+    display: block;
+    margin-top: 20px;
 }
 
 #add_stuff{
     display: inline-block;
     float: left;
 }
-
-#contact{
-    display: inline-block;
-    text-align: right;
-    float: right;
-    margin-right: 10px;
-    margin-top: 20px;
-}
-
