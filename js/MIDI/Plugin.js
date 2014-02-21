@@ -1,5 +1,4 @@
 /*
-	--------------------------------------------
 	MIDI.Plugin : 0.3.2 : 2013/01/26
 	--------------------------------------------
 	https://github.com/mudcube/MIDI.js
@@ -188,14 +187,17 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 		if (delay < ctx.currentTime) delay += ctx.currentTime;
 		var source = sources[channel + "" + note];
 		if (!source) return;
-		// @Miranet: "the values of 0.2 and 0.3 could ofcourse be used as 
-		// a 'release' parameter for ADSR like time settings."
-		// add { "metadata": { release: 0.3 } } to soundfont files
-		source.gain.linearRampToValueAtTime(1, delay);
-		source.gain.linearRampToValueAtTime(0, delay + 0.2);
-		//source.noteOff(delay + 0.3);
-		source.stop(delay + 0.3);
-		return source;
+        if (source.gainNode) {
+            var gain = source.gainNode.gain;
+            gain.linearRampToValueAtTime(gain.value, delay);
+            gain.linearRampToValueAtTime(-1, delay + 0.2);
+        }
+        if (source.noteOff) { // old api
+            source.noteOff(delay + 0.3);
+        } else {
+            source.stop(delay + 0.3);
+        }
+        delete sources[channel + "" + note];
 	};
 
 	root.chordOn = function (channel, chord, velocity, delay) {
@@ -363,9 +365,17 @@ if (window.Audio) (function () {
 	};
 	
 	root.stopAllNotes = function () {
-		for (var nid = 0, length = channels.length; nid < length; nid++) {
-			channels[nid].pause();
-		}
+        for (var source in sources) {
+            var delay = 0;
+            if (delay < ctx.currentTime) delay += ctx.currentTime;
+                sources[source].gain.linearRampToValueAtTime(1, delay);
+                sources[source].gain.linearRampToValueAtTime(0, delay + 0.2);
+                sources[source].noteOff(delay + 0.3);
+                delete sources[source];
+            }
+		//for (var nid = 0, length = channels.length; nid < length; nid++) {
+		//	channels[nid].pause();
+		//}
 	};
 	
 	root.connect = function (conf) {
