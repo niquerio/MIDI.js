@@ -355,9 +355,13 @@ function MidiPlayer(){
             if (typeof(o.source) === "number") {
                 window.clearTimeout(o.source);
             } else { // webaudio
-                var source = o.source;
-                source.disconnect(0);
-                source.noteOff(0);
+               // var source = o.source;
+                o.source.disconnect(0);
+           //     if (source.noteOff) { // old api
+           //     source.noteOff(0);
+           //     } else {
+           //     source.stop(0);
+           //     }
             }
         }
         // run callback to cancel any notes still playing
