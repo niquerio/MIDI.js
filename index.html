@@ -310,8 +310,8 @@ function setupChannels(){
             .prop("disabled","disabled")
             .attr("id","program"+i)
             .append("<option value=\"0\">Acoustic Grand Piano</option>")
-            .append("<option value=\"6\">Harpsichord</option>")
-            .append("<option value=\"74\">Recorder</option>")
+            .append("<option value=\"24\">Acoustic Guitar (nylon)</option>")
+            .append("<option value=\"68\">Oboe</option>")
             .change(function(){
                 var channel = $(this).attr("id").replace(/\D/g,'');
                 var program = $(this).val();
@@ -620,7 +620,7 @@ function load(){
 
     MIDI.loadPlugin({ 
         //instruments: "acoustic_grand_piano",
-        instruments: ["acoustic_grand_piano", "harpsichord", "recorder"],
+        instruments: ["acoustic_grand_piano", "acoustic_guitar_nylon", "oboe"],
         callback: function () {
 
             player = new MidiPlayer;
@@ -779,10 +779,10 @@ function add_instruments(){
     <div id="add_stuff" class="inactive">
     <form id="add_instruments">
     Add an instrument: <select id="add_instruments_select">
-	<option value="acoustic_guitar_nylon">Acoustic Guitar Nylon</option>
-	<option value="trumpet">Trumpet</option>
+	<option value="harpsichord">Harpsichord</option>
+	<option value="recorder">Recorder</option>
 	<option value="soprano_sax">Soprano Sax</option>
-	<option value="oboe">Oboe</option>
+	<option value="trumpet">Trumpet</option>
 	</select>
 	<input type=submit>
     </form>
