@@ -162,22 +162,25 @@ if (window.AudioContext || window.webkitAudioContext) (function () {
 
 
 	root.noteOn = function (channel, note, velocity, delay, instrument, channel_volume) {
-        
 		if (!audioBuffers[instrument + "" + note]) return;
+        
 		/// convert relative delay to absolute delay
 		if (delay < ctx.currentTime) delay += ctx.currentTime;
-		/// crate audio buffer
+		/// create audio buffer
 		var source = ctx.createBufferSource();
 		sources[channel + "" + note] = source;
 		source.buffer = audioBuffers[instrument + "" + note];
 		source.connect(ctx.destination);
-		
-		var gainNode = ctx.createGainNode();
+	    if (ctx.createGain){
+            source.gainNode = ctx.createGain();
+        }else{
+            source.gainNode = ctx.createGainNode();
+        }
+
 		var value = (velocity / 127) * (channel_volume / 127) * 2 - 1;
-		gainNode.connect(ctx.destination);
-		gainNode.gain.value = Math.max(-1, value);
-		source.connect(gainNode);
-		//source.noteOn(delay || 0);
+		source.gainNode.connect(ctx.destination);
+		source.gainNode.gain.value = Math.max(-1, value);
+		source.connect(source.gainNode);
 		source.start(delay || 0);
 		return source;
 	};
